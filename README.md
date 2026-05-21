@@ -1,11 +1,11 @@
 # Shondo vandar (শব্দ ভান্ডার) 📚🇧🇩
 > 🚀 **The ultimate open-source reference project and compilation pipeline demonstrating how to build your own high-performance custom Kindle bilingual dictionaries from scratch.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo_Vandar?color=vibrant&style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo-Vandar?color=vibrant&style=for-the-badge)](https://github.com/tahmidxp96/Shobdo-Vandar/releases)
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge)](https://www.python.org/)
 [![Kindle Compatible](https://img.shields.io/badge/format-Kindle%20MOBI-orange.svg?style=for-the-badge)](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
-[![Built by AI](https://img.shields.io/badge/built%20with-antigravity%20%2B%20gemini%203.5-blueviolet?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar)
-[![Over Engineered](https://img.shields.io/badge/over--engineered-heck%20yes-red?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar)
+[![Built by AI](https://img.shields.io/badge/built%20with-antigravity%20%2B%20gemini%203.5-blueviolet?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo-Vandar)
+[![Over Engineered](https://img.shields.io/badge/over--engineered-heck%20yes-red?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo-Vandar)
 
 ---
 
@@ -48,7 +48,7 @@ No humans were harmed in the making of this pipeline, though many virtual bytes 
 
 You do not need to build the dictionaries yourself! The latest compiled, ready-to-use `.mobi` files are automatically built and published with every release.
 
-1. Go to the **[Releases](https://github.com/tahmidxp96/Shobdo_Vandar/releases)** page (the "Download" section of the repository).
+1. Go to the **[Releases](https://github.com/tahmidxp96/Shobdo-Vandar/releases)** page (the "Download" section of the repository).
 2. Under the latest release assets, download the dictionary you want:
    * **`en-bn.mobi`** (English-to-Bangla Dictionary: **94,347 entries**, ~10.4 MB)
    * **`bn-en.mobi`** (Bangla-to-English Dictionary: **50,919 entries**, ~6.4 MB)
@@ -92,8 +92,8 @@ If you want to modify the source definitions, add custom vocabularies, or rebuil
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/tahmidxp96/Shobdo_Vandar.git
-   cd Shobdo_Vandar
+   git clone https://github.com/tahmidxp96/Shobdo-Vandar.git
+   cd Shobdo-Vandar
    ```
 
 2. **Run the Full Build Pipeline (Ingestion + Compilation):**
