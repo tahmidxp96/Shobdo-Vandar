@@ -1,11 +1,30 @@
-# Shobdo Vandar (শব্দ ভাণ্ডার) 📚🇧🇩
-> 🚀 An over-engineered, highly-nerdy compilation pipeline designed to satisfy the ultimate bilingual bibliophile's reading cravings on Kindle.
+# Shondo vandar (শব্দ ভান্ডার) 📚🇧🇩
+> 🚀 **The ultimate open-source reference project and compilation pipeline demonstrating how to build your own high-performance custom Kindle bilingual dictionaries from scratch.**
 
 [![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo_Vandar?color=vibrant&style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar/releases)
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge)](https://www.python.org/)
 [![Kindle Compatible](https://img.shields.io/badge/format-Kindle%20MOBI-orange.svg?style=for-the-badge)](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
 [![Built by AI](https://img.shields.io/badge/built%20with-antigravity%20%2B%20gemini%203.5-blueviolet?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar)
 [![Over Engineered](https://img.shields.io/badge/over--engineered-heck%20yes-red?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar)
+
+---
+
+## 📖 The Kindle Dictionary Reference Blueprint
+
+This repository is designed not just as a deployment pipeline, but as **the ultimate open-source reference blueprint** for developers, linguists, and e-reader enthusiasts wanting to build their own Kindle-compatible bilingual or monolingual dictionaries.
+
+If you have ever tried to find official documentation on how to build Kindle dictionaries, you probably know how fragmented, outdated, or sparse the information is. This project compiles those missing pieces into a single, cohesive, modern Python-based boilerplate. It demonstrates:
+
+1. **XHTML Index Markup (`idx` namespace)**: How to structure XHTML entries using `<idx:entry>`, `<idx:orth>`, and `<idx:infl>` so Kindle's search system indexes them.
+2. **OPF Package Metadata Configuration**: How to configure target/source languages (`DictionaryInLanguage`, `DictionaryOutLanguage`) and group them within the mandatory `<x-metadata>` block inside `.opf` control files.
+3. **Database Integration & Normalization**: How to stage, deduplicate, and merge diverse raw database files (SQLite/JSON) using a standard pipeline before sharding them into size-compliant XHTML pages.
+4. **Embedded KindleGen Integration**: How to dynamically resolve and invoke Amazon's proprietary Kindle compiler from a Python script on both local systems and automated cloud runners (GitHub Actions).
+
+*Feel free to fork this project, drop in your own source databases, and build your own custom dictionaries for any language pair!*
+
+---
+
+## 🛠️ The Pipeline Overview
 
 An advanced, high-performance compilation pipeline that constructs comprehensive, rich, and highly accurate English-to-Bangla (`en-bn`) and Bangla-to-English (`bn-en`) dictionaries optimized specifically for **Amazon Kindle** e-readers.
 

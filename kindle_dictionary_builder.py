@@ -761,7 +761,7 @@ class KindleDictionaryCompiler:
     <dc:title>{self.title}</dc:title>
     <dc:language>{self.input_lang}</dc:language>
     <dc:creator>Bilingual Lexicography Compiler</dc:creator>
-    <dc:publisher>Shobdo Vandar Project</dc:publisher>
+    <dc:publisher>Shondo vandar Project</dc:publisher>
     
     <!-- Kindle Dictionary Metadata Declarations -->
     <meta name="BookType" content="dictionary"/>
