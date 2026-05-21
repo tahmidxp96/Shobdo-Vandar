@@ -1,0 +1,142 @@
+{
+  "bank": [
+    {
+      "pos": "noun",
+      "context": "financial institution",
+      "meanings": ["ব্যাংক", "অর্থলগ্নিকারী প্রতিষ্ঠান"],
+      "example_en": "He deposited his monthly salary in the bank.",
+      "example_bn": "সে ব্যাংকে তার মাসিক বেতন জমা রেখেছে।"
+    },
+    {
+      "pos": "noun",
+      "context": "border of a river",
+      "meanings": ["নদীর তীর", "কূল", "পাড়"],
+      "example_en": "They walked slowly along the river bank at sunset.",
+      "example_bn": "তারা সূর্যাস্তের সময় নদীর তীর ধরে ধীরে ধীরে হাঁটছিল।"
+    }
+  ],
+  "run": [
+    {
+      "pos": "verb",
+      "context": "physical movement",
+      "meanings": ["দৌড়ানো", "দ্রুত অগ্রসর হওয়া"],
+      "example_en": "The children love to run around the green park.",
+      "example_bn": "শিশুরা সবুজ পার্কের চারপাশে দৌড়াতে পছন্দ করে।"
+    },
+    {
+      "pos": "verb",
+      "context": "manage/operate a business",
+      "meanings": ["পরিচালনা করা", "চালানো"],
+      "example_en": "She runs a highly successful software company in Dhaka.",
+      "example_bn": "তিনি ঢাকায় একটি অত্যন্ত সফল সফটওয়্যার কোম্পানি পরিচালনা করেন।"
+    },
+    {
+      "pos": "verb",
+      "context": "execute a computer program",
+      "meanings": ["রান করা", "চালু করা", "এক্সিকিউট করা"],
+      "example_en": "You can run this python script directly in your terminal.",
+      "example_bn": "আপনি এই পাইথন স্ক্রিপ্টটি সরাসরি আপনার টার্মিনালে চালু করতে পারেন।"
+    }
+  ],
+  "present": [
+    {
+      "pos": "noun",
+      "context": "a gift",
+      "meanings": ["উপহার", "নজরানা"],
+      "example_en": "She received a beautiful birthday present from her father.",
+      "example_bn": "সে তার বাবার কাছ থেকে জন্মদিনের একটি সুন্দর উপহার পেয়েছে।"
+    },
+    {
+      "pos": "noun",
+      "context": "current period of time",
+      "meanings": ["বর্তমান কাল", "বর্তমান সময়"],
+      "example_en": "We must focus on the present rather than worrying about the future.",
+      "example_bn": "ভবিষ্যত নিয়ে চিন্তা না করে আমাদের বর্তমানে মনোনিবেশ করা উচিত।"
+    },
+    {
+      "pos": "verb",
+      "context": "give or award formally",
+      "meanings": ["উপস্থাপন করা", "পেশ করা", "প্রদান করা"],
+      "example_en": "The mayor will present the prestigious award to the winner.",
+      "example_bn": "মেয়র বিজয়ী ব্যক্তির হাতে মর্যাদাপূর্ণ পুরস্কারটি তুলে দেবেন।"
+    }
+  ],
+  "set": [
+    {
+      "pos": "noun",
+      "context": "group of matching things",
+      "meanings": ["দল", "সেট", "শ্রেণী"],
+      "example_en": "She bought a complete set of classic English literature books.",
+      "example_bn": "তিনি ক্লাসিক ইংরেজি সাহিত্য বইয়ের একটি সম্পূর্ণ সেট কিনেছেন।"
+    },
+    {
+      "pos": "verb",
+      "context": "establish or fix a value/rule",
+      "meanings": ["নির্ধারণ করা", "স্থাপন করা", "স্থির করা"],
+      "example_en": "The school authority decided to set new standards for academic grades.",
+      "example_bn": "স্কুল কর্তৃপক্ষ একাডেমিক গ্রেডের জন্য নতুন মান নির্ধারণ করার সিদ্ধান্ত নিয়েছে।"
+    },
+    {
+      "pos": "verb",
+      "context": "sun descending below horizon",
+      "meanings": ["অস্ত যাওয়া"],
+      "example_en": "The sun begins to set in the western sky.",
+      "example_bn": "পশ্চিম আকাশে সূর্য অস্ত যেতে শুরু করেছে।"
+    }
+  ],
+  "book": [
+    {
+      "pos": "noun",
+      "context": "reading material",
+      "meanings": ["বই", "গ্রন্থ", "পুস্তক"],
+      "example_en": "Reading books is a wonderful habit to expand your knowledge.",
+      "example_bn": "বই পড়া আপনার জ্ঞান প্রসারিত করার একটি চমৎকার অভ্যাস।"
+    },
+    {
+      "pos": "verb",
+      "context": "reserve tickets or rooms",
+      "meanings": ["বুক করা", "আগে থেকে সংরক্ষণ করা"],
+      "example_en": "We should book our flight tickets early to get a discount.",
+      "example_bn": "ডিসকাউন্ট পেতে আমাদের ফ্লাইটের টিকিট আগেই বুক করা উচিত।"
+    }
+  ],
+  "spring": [
+    {
+      "pos": "noun",
+      "context": "the season",
+      "meanings": ["বসন্ত কাল", "বসন্ত ঋতু"],
+      "example_en": "Flowers bloom beautifully in the spring season.",
+      "example_bn": "বসন্তকালে ফুলগুলো খুব সুন্দরভাবে ফোটে।"
+    },
+    {
+      "pos": "noun",
+      "context": "coiled metal device",
+      "meanings": ["স্প্রিং", "স্থিতিস্থাপক লোহার কুণ্ডলী"],
+      "example_en": "The mattress lost its comfort because of a broken metal spring.",
+      "example_bn": "একটি ভাঙা লোহার স্প্রিংয়ের কারণে তোষকটি তার আরাম হারিয়েছে।"
+    },
+    {
+      "pos": "noun",
+      "context": "natural flow of water",
+      "meanings": ["ঝরণা", "প্রস্রবণ"],
+      "example_en": "They discovered a freshwater spring flowing deep inside the forest.",
+      "example_bn": "তারা বনের গভীরে প্রবাহিত একটি মিষ্টি জলের ঝরণা আবিষ্কার করেছে।"
+    }
+  ],
+  "lead": [
+    {
+      "pos": "verb",
+      "context": "guide or conduct",
+      "meanings": ["নেতৃত্ব দেওয়া", "পথ দেখানো", "পরিচালনা করা"],
+      "example_en": "The experienced captain will lead the young team to victory.",
+      "example_bn": "অভিজ্ঞ অধিনায়ক তরুণ দলটিকে বিজয়ের দিকে নিয়ে যাবেন।"
+    },
+    {
+      "pos": "noun",
+      "context": "toxic heavy metal",
+      "meanings": ["সীসা"],
+      "example_en": "Lead is a highly toxic element that can contaminate drinking water.",
+      "example_bn": "সীসা একটি অত্যন্ত বিষাক্ত উপাদান যা পানীয় জলকে দূষিত করতে পারে।"
+    }
+  ]
+}

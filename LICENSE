@@ -1,0 +1,59 @@
+MIT License
+
+Copyright (c) 2026 Tahmid
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+### 📚 Third-Party Data Attribution & Licensing
+
+This repository contains database compilation pipelines that ingest, consolidate, and format bilingual lexical data from several open-source and public-domain resources. The MIT License above applies **strictly to the pipeline builder source code** (`kindle_dictionary_builder.py`, workflow files, and utility configurations).
+
+The raw dictionary data and vocabularies remain the intellectual properties of their respective authors and projects:
+
+1. **Aparajeyo Dictionary:** Ingested and parsed under its respective open-source licensing.
+2. **MinhasKamal (Bangla Dictionary):** Ingested and structured under its respective open-source licensing.
+3. **Ridmik Dictionary:** Ingested and formatted under its respective open-source licensing.
+4. **Bangla Academy Reference Mappings:** Used for standard grammatical and lexical validation references.
+
+---
+
+### 🛡️ How to Add Other Raw Dictionaries Maintaining Compliance
+
+If you are including other raw dictionary files in this repository, you **MUST** adhere to the following open-source compliance guidelines:
+
+#### 1. Directory-Level Isolation (Scoped Licensing)
+Keep each raw dictionary in its own subdirectory (e.g., `Aparajeyo/`, `MinhasKamal/`, `OtherDict/`). **Never** merge raw raw source files directly in the root or into an unattributed staging directory.
+
+#### 2. Include a Source Credit File
+Inside the directory of the new raw dictionary (e.g., `OtherDict/`), you must include a **`README.md`** or **`LICENSE`** file containing:
+* **Original Creator/Author:** The name of the developer or organization.
+* **Link to Original Project:** A URL to their GitHub repository or website.
+* **License Type:** (e.g., MIT, CC-BY-SA, GPL, Public Domain).
+* **Original Copyright Notice:** The original copyright block from their repository.
+
+#### 3. Update the Root Declarations
+Whenever you add a new raw dataset, append it to the numbered attribution list in the root `LICENSE` and `README.md` files of this repository.
+
+#### 4. Copyleft (GPL/CC-BY-SA) Considerations
+* **Data Processing vs. Combined Code:** Running a parser script (like `kindle_dictionary_builder.py`) on a GPL-licensed text file is considered data transformation, not software linking. Therefore, your Python script code remains under the MIT License.
+* **Redistribution of Raw Files:** If the new raw file is licensed under copyleft terms (like GPL or CC-BY-SA) and you push it to your GitHub repository, those specific raw files must retain their original license. The nested `LICENSE` file within their folder ensures this.
+
+By using the compiled e-books or builder pipelines, you agree to respect the copyright and usage guidelines of the original resource authors.

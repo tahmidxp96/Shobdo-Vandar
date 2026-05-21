@@ -1,0 +1,60 @@
+name: Build and Release MOBI Dictionaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Build & Publish MOBI Assets
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Download Kindle Previewer 3
+        run: |
+          echo "Downloading Amazon's Kindle Previewer installer..."
+          curl -L "https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg" -o KindlePreviewerInstaller.pkg
+
+      - name: Install Kindle Previewer 3
+        run: |
+          echo "Installing Kindle Previewer headlessly..."
+          sudo installer -pkg KindlePreviewerInstaller.pkg -target /
+          
+          # Verify detection path exists
+          KP_PATH="/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen"
+          if [ -f "$KP_PATH" ]; then
+            echo "Kindle Previewer successfully installed at: $KP_PATH"
+          else
+            echo "ERROR: Kindle Previewer was not installed correctly!"
+            exit 1
+          fi
+
+      - name: Compile MOBI Dictionaries
+        run: |
+          echo "Running dictionary compiler pipeline..."
+          # Running without -c will trigger full raw data staging, consolidation, and MOBI compilation
+          python3 kindle_dictionary_builder.py
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/en-bn/en-bn.mobi
+            build/bn-en/bn-en.mobi
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
