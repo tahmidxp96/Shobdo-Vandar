@@ -1052,7 +1052,7 @@ def main():
         bn_en_compiler.compile_all()
         
         # 3. Auto-compile MOBI files if tools are available
-        log_step(4.5, "Auto-Compiling MOBI E-Books")
+        log_step(5, "Auto-Compiling MOBI E-Books")
         en_bn_mobi = os.path.join(BUILD_DIR, 'en-bn', 'en-bn.mobi')
         bn_en_mobi = os.path.join(BUILD_DIR, 'bn-en', 'bn-en.mobi')
         
@@ -1072,7 +1072,7 @@ def main():
         log_success(f"Entire compilation completed in {time.time() - start:.2f} seconds!")
         
         # 4. Print detailed counts
-        log_step(5, "Final Data Reports & Validation")
+        log_step(6, "Final Data Reports & Validation")
         print_statistics()
         
         log_success("All pipeline stages completed successfully!")

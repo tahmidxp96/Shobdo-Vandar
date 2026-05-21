@@ -1,67 +1,104 @@
 # Shondo vandar (শব্দ ভান্ডার) 📚🇧🇩
-> 🚀 **The ultimate open-source reference project and compilation pipeline demonstrating how to build your own high-performance custom Kindle bilingual dictionaries from scratch.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo-Vandar?color=vibrant&style=for-the-badge)](https://github.com/tahmidxp96/Shobdo-Vandar/releases)
-[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge)](https://www.python.org/)
+A developer-centric reference project and high-performance compilation pipeline showing how to build custom, search-compliant Kindle bilingual dictionaries from raw lexicographical datasets.
+
+[![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo-Vandar?logo=github&style=for-the-badge&color=3383FF)](https://github.com/tahmidxp96/Shobdo-Vandar/releases)
+[![Total Downloads](https://img.shields.io/github/downloads/tahmidxp96/Shobdo-Vandar/total?logo=github&style=for-the-badge&color=2EA043)](https://github.com/tahmidxp96/Shobdo-Vandar/releases)
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?logo=python&style=for-the-badge&color=FFD43B)](https://www.python.org/)
 [![Kindle Compatible](https://img.shields.io/badge/format-Kindle%20MOBI-orange.svg?style=for-the-badge)](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
-[![Built by AI](https://img.shields.io/badge/built%20with-antigravity%20%2B%20gemini%203.5-blueviolet?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo-Vandar)
-[![Over Engineered](https://img.shields.io/badge/over--engineered-heck%20yes-red?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo-Vandar)
 
 ---
 
-## 📖 The Kindle Dictionary Reference Blueprint
+## 📖 The Kindle Dictionary Blueprint
 
-This repository is designed not just as a deployment pipeline, but as **the ultimate open-source reference blueprint** for developers, linguists, and e-reader enthusiasts wanting to build their own Kindle-compatible bilingual or monolingual dictionaries.
+Official documentation on building custom Kindle dictionaries is notoriously sparse, fragmented, and outdated. This repository serves as a modern, open-source boilerplate to demystify Kindle's proprietary formatting standards. 
 
-If you have ever tried to find official documentation on how to build Kindle dictionaries, you probably know how fragmented, outdated, or sparse the information is. This project compiles those missing pieces into a single, cohesive, modern Python-based boilerplate. It demonstrates:
+By analyzing this codebase, you can easily adapt the pipeline to compile high-fidelity dictionaries for any language pair. The project highlights four essential implementation areas:
 
-1. **XHTML Index Markup (`idx` namespace)**: How to structure XHTML entries using `<idx:entry>`, `<idx:orth>`, and `<idx:infl>` so Kindle's search system indexes them.
-2. **OPF Package Metadata Configuration**: How to configure target/source languages (`DictionaryInLanguage`, `DictionaryOutLanguage`) and group them within the mandatory `<x-metadata>` block inside `.opf` control files.
-3. **Database Integration & Normalization**: How to stage, deduplicate, and merge diverse raw database files (SQLite/JSON) using a standard pipeline before sharding them into size-compliant XHTML pages.
-4. **Embedded KindleGen Integration**: How to dynamically resolve and invoke Amazon's proprietary Kindle compiler from a Python script on both local systems and automated cloud runners (GitHub Actions).
-
-*Feel free to fork this project, drop in your own source databases, and build your own custom dictionaries for any language pair!*
+1. **XHTML Schema Compliance (`idx` Namespace)**: Demonstrates how to structure dictionary entries using standard Kindle markup elements—such as `<idx:entry>`, `<idx:orth>`, and `<idx:infl>`—to allow Kindle's indexing system to parse and index inflections successfully.
+2. **OPF Package Metadata Configuration**: Shows how to properly structure target and source languages (`DictionaryInLanguage`, `DictionaryOutLanguage`) and declare lookup indexes inside the mandatory `<x-metadata>` block of the `.opf` manifest.
+3. **Database Integration & Normalization**: Standardizes, deduplicates, and merges unstructured source data (from SQLite or JSON formats) into a unified relational database before sharding the output into size-compliant XHTML files to prevent compiler crashes.
+4. **Embedded KindleGen Toolchain Invocation**: Automatically resolves and calls Amazon's Kindle compiler from a Python environment, ensuring compatibility on both local setups and headless CI/CD runner pipelines.
 
 ---
 
-## 🛠️ The Pipeline Overview
+## 📐 System Architecture & Data Flow
 
-An advanced, high-performance compilation pipeline that constructs comprehensive, rich, and highly accurate English-to-Bangla (`en-bn`) and Bangla-to-English (`bn-en`) dictionaries optimized specifically for **Amazon Kindle** e-readers.
+This diagram illustrates how raw source lexicons are ingested, consolidated, formatted into Kindle-compliant markups, and compiled into optimized dictionary files:
 
-Consolidated and deduplicated from master sources (**Aparajeyo, MinhasKamal, Ridmik, and Bangla Academy**), this project packages **over 145,000+ words** with precise contextual definitions, inflection index matching, and phonetic normalizations.
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        DATA PIPELINE ARCHITECTURE                      │
+└────────────────────────────────────────────────────────────────────────┘
+
+ [ Raw Lexicons ]        [ Normalization & DB ]         [ Document Generation ]
+ ┌──────────────┐        ┌────────────────────┐         ┌─────────────────────┐
+ │ MinhasKamal  │───────>│                    │         │  XHTML Sharding     │
+ └──────────────┘        │                    │         │  (Max 1000 entries) │
+ ┌──────────────┐        │                    │         │  ┌────────────────┐ │
+ │  Aparajeyo   │───────>│ kindle_dictionary_ │────────>│  │ content_N.html │ │
+ └──────────────┘        │     builder.py     │         │  └────────────────┘ │
+ ┌──────────────┐        │                    │         │  - xmlns:idx markup │
+ │    Ridmik    │───────>│                    │         │  - <idx:entry> tags │
+ └──────────────┘        │                    │         └──────────┬──────────┘
+ ┌──────────────┐        │                    │                    │
+ │ Bangla Acad. │───────>│  - SQLite Staging  │                    ▼
+ └──────────────┘        │    (lexicon.db)    │         ┌─────────────────────┐
+                         │  - Deduplication   │         │ OPF Meta / Nav XML  │
+                         │  - Normalization   │         │ - dict.opf          │
+                         └────────────────────┘         │ - <x-metadata> tags │
+                                                        │ - nav.html          │
+                                                        └──────────┬──────────┘
+                                                                   │
+                                                                   ▼
+ [ Compiler Invocation ]                                [ Distribution ]
+ ┌────────────────────────────────────────────────┐     ┌─────────────────────┐
+ │           Kindle Previewer 3 Toolchain         │     │  Direct Sideload    │
+ │  ┌──────────────────────────────────────────┐  │     │  (USB to device)    │
+ │  │      Embedded kindlegen Compiler        │  │     └──────────▲──────────┘
+ │  └────────────────────┬─────────────────────┘  │                │
+ │                       │                        ├────────────────┘
+ │                       ▼                        │
+ │  ┌──────────────────────────────────────────┐  │     ┌─────────────────────┐
+ │  │        High-Fidelity .MOBI Output        │──┼────>│   GitHub Releases   │
+ │  │  - en-bn.mobi (~94.4k entries, 10.4 MB)  │  │     │   (Automated CI)    │
+ │  │  - bn-en.mobi (~50.9k entries,  6.4 MB)  │  │     └─────────────────────┘
+ │  └──────────────────────────────────────────┘  │
+ └────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🧠 The Origin Story & AI Collaboration
+## 🧠 Project Origins & AI Collaboration
 
-This repository is the byproduct of a passionate hobby project built to master the black magic of **Python**, the intricacies of **Git/GitHub workflows**, and the hidden depths of **Kindle's proprietary indexing architecture**. What started as a simple desire to look up words while reading turned into an adventure in bilingual lexicography optimization.
+This repository began as a personal hobby project. The goal was twofold: to gain a practical understanding of writing robust Python scripts and managing GitHub CI/CD workflows, and to create an accurate, highly responsive dictionary for reading Bangla literature on a Kindle.
 
-This project was built hand-in-hand with an AI pair programmer:
-*   **Architected & Written By:** **Antigravity** (your friendly agentic AI coding companion)
-*   **Cognitive Engine:** **Gemini 3.5 Flash** (powering all the syntax generation, regex optimizations, and SQLite query tuning)
+The codebase was developed in close collaboration with an AI pair-programmer:
+* **Assistant:** **Antigravity** (an agentic AI developer)
+* **Cognitive Model:** **Gemini 3.5 Flash** (responsible for parsing optimizations, SQL querying structures, and automated tests)
 
-No humans were harmed in the making of this pipeline, though many virtual bytes were compressed.
-
----
-
-## 📥 How to Download the Dictionaries
-
-You do not need to build the dictionaries yourself! The latest compiled, ready-to-use `.mobi` files are automatically built and published with every release.
-
-1. Go to the **[Releases](https://github.com/tahmidxp96/Shobdo-Vandar/releases)** page (the "Download" section of the repository).
-2. Under the latest release assets, download the dictionary you want:
-   * **`en-bn.mobi`** (English-to-Bangla Dictionary: **94,347 entries**, ~10.4 MB)
-   * **`bn-en.mobi`** (Bangla-to-English Dictionary: **50,919 entries**, ~6.4 MB)
+This project demonstrates how pairing standard developer workflows with AI capabilities can produce reliable, production-ready output from fragmented, legacy documentations.
 
 ---
 
-## 📲 How to Load Dictionaries onto your Kindle
+## 📥 Downloading Compiled Dictionaries
 
-To install these dictionaries on any physical Kindle device (Paperwhite, Oasis, Scribe, Basic, or Voyage):
+You do not need to build these files manually. The compilation pipeline runs automatically on every release, compiling and attaching ready-to-use `.mobi` files to the release page.
 
-1. **Connect your Kindle** to your computer using a USB cable.
-2. Open your file manager (Finder on Mac or File Explorer on Windows) and locate the **Kindle** drive.
-3. Copy the downloaded `.mobi` file(s) into the Kindle's **`documents/dictionaries/`** folder:
+1. Navigate to the **[Releases](https://github.com/tahmidxp96/Shobdo-Vandar/releases)** page.
+2. Download the dictionary binary you need from the assets section:
+   * **`en-bn.mobi`** (English-to-Bangla: **94,347 entries**, ~10.4 MB)
+   * **`bn-en.mobi`** (Bangla-to-English: **50,919 entries**, ~6.4 MB)
+
+---
+
+## 📲 Installation on Kindle Devices
+
+To load the compiled dictionaries onto any physical Kindle (including Kindle Paperwhite, Oasis, Scribe, and Basic models):
+
+1. **Connect your Kindle** to your computer via a USB cable.
+2. Open your system file manager and navigate to the mounted **Kindle** directory.
+3. Copy the downloaded `.mobi` files into the Kindle's **`documents/dictionaries/`** folder:
    ```text
    Kindle/
    └── documents/
@@ -69,82 +106,81 @@ To install these dictionaries on any physical Kindle device (Paperwhite, Oasis, 
            ├── en-bn.mobi
            └── bn-en.mobi
    ```
-4. **Eject and disconnect** your Kindle safely.
-5. **Set as Default:**
-   * On your Kindle: Go to **Settings ➔ Language & Dictionaries ➔ Dictionaries**.
-   * Choose **English** and select **High-Quality English-to-Bangla Kindle Dictionary**.
-   * Choose **Bangla** and select **Advanced Bangla-to-English Learner's Dictionary**.
-6. Enjoy instant context-aware lookups while reading!
+4. **Safely eject** the Kindle from your computer.
+5. **Activate the Dictionaries:**
+   * On your device, go to **Settings ➔ Language & Dictionaries ➔ Dictionaries**.
+   * Under the **English** language category, select **High-Quality English-to-Bangla Kindle Dictionary**.
+   * Under the **Bangla** language category, select **Advanced Bangla-to-English Learner's Dictionary**.
+6. Highlight any English or Bangla word inside an e-book to view instant, context-rich definitions.
 
 ---
 
 ## 🛠️ Local Development & Manual Compilation
 
-If you want to modify the source definitions, add custom vocabularies, or rebuild the dictionaries locally:
+If you want to modify source definitions, add custom glossaries, or run the compilation suite locally, follow these steps:
 
 ### Prerequisites
 * **Python 3.8+**
-* **Kindle Previewer 3** installed on your machine.
-  * [Download Kindle Previewer 3 for Mac/Windows](https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg)
-  * The compiler pipeline will automatically auto-detect the installation and locate `kindlegen` embedded inside.
+* **Kindle Previewer 3** (must be installed on the host machine).
+  * [Download Kindle Previewer 3 macOS / Windows Installer](https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg)
+  * The Python builder script automatically resolves the installation and detects the embedded `kindlegen` binary.
 
 ### Execution Guide
 
-1. **Clone the Repository:**
+1. **Clone the Repository**:
    ```bash
    git clone https://github.com/tahmidxp96/Shobdo-Vandar.git
    cd Shobdo-Vandar
    ```
 
-2. **Run the Full Build Pipeline (Ingestion + Compilation):**
+2. **Run the Complete Build Suite** (performs database staging, consolidation, and full MOBI generation):
    ```bash
    python3 kindle_dictionary_builder.py
    ```
-   *This initializes the database (`lexicon.db`), parses all raw resources under staging folders, deduplicates master definitions, and builds the MOBI files.*
 
-3. **Recompile MOBI files only (Skips staging database rebuilds for speed):**
+3. **Recompile MOBI Binaries Only** (skips raw ingestion stages for rapid pipeline prototyping):
    ```bash
    python3 kindle_dictionary_builder.py -c
    ```
 
-4. **Query & Preview Layouts in your Terminal:**
-   You can preview how any word will look inside your Kindle e-reader using a beautifully formatted terminal output:
+4. **Preview Dictionary Layouts Directly in Terminal**:
+   You can verify how an entry is displayed on Kindle popups and full-page layouts using the terminal lookup previewer:
    ```bash
    python3 kindle_dictionary_builder.py -p "benevolent"
    ```
 
 ---
 
-## 📊 Lexicon Architecture & Master Statistics
+## 📊 Lexicon Architecture & Coverage
 
-The pipeline automatically processes and builds the dictionary from multiple staged sources:
+The builder compiles custom bilingual dictionaries by normalising data across multiple staging references:
 
-| Source | Raw Records Ingested | Target Direction | Key Features |
+| Source | Records Processed | Translation Pathway | Primary Lexical Characteristics |
 | :--- | :--- | :--- | :--- |
-| **Aparajeyo** | 186,776 | English ➔ Bangla | Rich synonym arrays and definitions |
-| **MinhasKamal** | 93,421 | English ➔ Bangla | High coverage vocabulary index |
-| **Ridmik** | 13,474 | Bangla ➔ English | Standard colloquial and formal mappings |
-| **Bangla Academy** | Reference | Both | Official lexical structure validations |
+| **Aparajeyo** | 186,776 | English ➔ Bangla | Comprehensive synonym groups and parts of speech |
+| **MinhasKamal** | 93,421 | English ➔ Bangla | Standard colloquial vocabulary mapping |
+| **Ridmik** | 13,474 | Bangla ➔ English | Standardized lexical mappings |
+| **Bangla Academy** | Reference | Both | Direct orthographical and spelling validations |
 
-### Consolidated Outputs:
-* **Bangla-to-English (`bn-en`):** `50,919` unique entries
-* **English-to-Bangla (`en-bn`):** `94,347` unique entries
-* **Total Combined Lexicon:** **`145,266`** deduplicated, high-fidelity words.
+### Consolidated Output Statistics:
+* **Bangla-to-English (`bn-en`)**: `50,919` unique entries
+* **English-to-Bangla (`en-bn`)**: `94,347` unique entries
+* **Total Combined Database**: **`145,266`** deduplicated, high-fidelity words
 
 ---
 
-## 🤖 Continuous Integration & Automatic Publishing
+## 🤖 CI/CD Automation
 
-We use a fully automated **GitHub Actions** pipeline configured in `.github/workflows/release.yml`. 
+This repository utilizes GitHub Actions (`.github/workflows/release.yml`) for continuous deployment. 
 
-Whenever you push a tag starting with `v` (e.g., `git tag v1.0.0` && `git push origin v1.0.0`), the workflow:
-1. Provisions a secure `macos-latest` container.
-2. Installs Amazon's official **Kindle Previewer 3** compiler.
-3. Automatically executes `kindle_dictionary_builder.py` to ingest the raw staging sources and build fresh, optimized `.mobi` files.
-4. Generates a new **GitHub Release** and uploads the `.mobi` dictionaries as downloadable assets.
+Whenever a release version tag (e.g., `v1.2.0`) is pushed to the repository:
+1. A fresh macOS environment is provisioned on GitHub runners.
+2. The latest **Kindle Previewer 3** package is dynamically fetched and installed.
+3. The `kindle_dictionary_builder.py` script initializes the ingestion pipeline, performs standardizations, and runs the MOBI compilation.
+4. The workflow bundles the completed `.mobi` binaries and publishes them directly to your repository's Releases page.
 
 ---
 
 ## 📄 License & Attribution
 
-All raw resources are proprietary properties of their respective authors and projects (Aparajeyo, MinhasKamal, Ridmik, and Bangla Academy). The builder pipeline script is distributed under the **MIT License**.
+All raw lexicographical resources remain the intellectual property of their respective authors and projects (Aparajeyo, MinhasKamal, Ridmik, and Bangla Academy). The builder and compilation pipeline scripts are distributed under the **MIT License**.

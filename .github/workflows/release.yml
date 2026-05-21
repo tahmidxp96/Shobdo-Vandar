@@ -1,4 +1,5 @@
-name: Build and Release MOBI Dictionaries
+name: Build and Release Kindle Dictionaries
+run-name: Build & Release version ${{ github.ref_name }} by @${{ github.actor }}
 
 on:
   push:
@@ -8,46 +9,46 @@ on:
 
 jobs:
   release:
-    name: Build & Publish MOBI Assets
+    name: Build & Publish MOBI Dictionaries (macOS)
     runs-on: macos-latest
     permissions:
       contents: write
 
     steps:
-      - name: Checkout Source Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python Runtime (v3.10)
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Download Kindle Previewer 3
+      - name: Download Kindle Previewer macOS Installer
         run: |
-          echo "Downloading Amazon's Kindle Previewer installer..."
+          echo "Downloading official Amazon Kindle Previewer 3 macOS installer..."
           curl -L "https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg" -o KindlePreviewerInstaller.pkg
 
-      - name: Install Kindle Previewer 3
+      - name: Install Kindle Previewer and Verify compiler
         run: |
-          echo "Installing Kindle Previewer headlessly..."
+          echo "Executing silent macOS installer..."
           sudo installer -pkg KindlePreviewerInstaller.pkg -target /
           
-          # Verify detection path exists
+          # Verify detection path for embedded kindlegen
           KP_PATH="/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen"
           if [ -f "$KP_PATH" ]; then
-            echo "Kindle Previewer successfully installed at: $KP_PATH"
+            echo "SUCCESS: Kindle Previewer compiler found at: $KP_PATH"
           else
-            echo "ERROR: Kindle Previewer was not installed correctly!"
+            echo "FATAL: Kindle Previewer was not installed correctly!"
             exit 1
           fi
 
-      - name: Compile MOBI Dictionaries
+      - name: Ingest Lexicon & Compile MOBI Dictionaries
         run: |
-          echo "Running dictionary compiler pipeline..."
-          # Running without -c will trigger full raw data staging, consolidation, and MOBI compilation
+          echo "Initializing dictionary builder pipeline..."
+          # Running without -c triggers raw data ingestion, normalization, and full MOBI compilation
           python3 kindle_dictionary_builder.py
 
-      - name: Publish GitHub Release
+      - name: Publish Compiled MOBI Dictionaries to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           files: |
@@ -58,3 +59,4 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
