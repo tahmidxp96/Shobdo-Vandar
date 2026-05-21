@@ -1,13 +1,27 @@
 # Shobdo Vandar (শব্দ ভাণ্ডার) 📚🇧🇩
-> High-Performance Standalone Kindle Bilingual Dictionaries (English ⇄ Bangla)
+> 🚀 An over-engineered, highly-nerdy compilation pipeline designed to satisfy the ultimate bilingual bibliophile's reading cravings on Kindle.
 
 [![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo_Vandar?color=vibrant&style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar/releases)
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge)](https://www.python.org/)
 [![Kindle Compatible](https://img.shields.io/badge/format-Kindle%20MOBI-orange.svg?style=for-the-badge)](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
+[![Built by AI](https://img.shields.io/badge/built%20with-antigravity%20%2B%20gemini%203.5-blueviolet?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar)
+[![Over Engineered](https://img.shields.io/badge/over--engineered-heck%20yes-red?style=for-the-badge)](https://github.com/tahmidxp96/Shobdo_Vandar)
 
 An advanced, high-performance compilation pipeline that constructs comprehensive, rich, and highly accurate English-to-Bangla (`en-bn`) and Bangla-to-English (`bn-en`) dictionaries optimized specifically for **Amazon Kindle** e-readers.
 
 Consolidated and deduplicated from master sources (**Aparajeyo, MinhasKamal, Ridmik, and Bangla Academy**), this project packages **over 145,000+ words** with precise contextual definitions, inflection index matching, and phonetic normalizations.
+
+---
+
+## 🧠 The Origin Story & AI Collaboration
+
+This repository is the byproduct of a passionate hobby project built to master the black magic of **Python**, the intricacies of **Git/GitHub workflows**, and the hidden depths of **Kindle's proprietary indexing architecture**. What started as a simple desire to look up words while reading turned into an adventure in bilingual lexicography optimization.
+
+This project was built hand-in-hand with an AI pair programmer:
+*   **Architected & Written By:** **Antigravity** (your friendly agentic AI coding companion)
+*   **Cognitive Engine:** **Gemini 3.5 Flash** (powering all the syntax generation, regex optimizations, and SQLite query tuning)
+
+No humans were harmed in the making of this pipeline, though many virtual bytes were compressed.
 
 ---
 
