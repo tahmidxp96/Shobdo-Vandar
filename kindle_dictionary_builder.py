@@ -161,7 +161,23 @@ class EnglishMorphologyEngine:
             else:
                 forms.add(lemma + 'er')
                 forms.add(lemma + 'est')
-                
+        
+        return list(forms)
+
+
+class BanglaMorphologyEngine:
+    NOUN_SUFFIXES = ['টি', 'টা', 'গুলো', 'গুলি', 'দের', 'র', 'এর', 'কে', 'তে', 'এ', 'য়ে']
+    
+    @classmethod
+    def generate_inflections(cls, lemma):
+        """Generates common Bangla inflections/case endings for a base lemma."""
+        lemma = lemma.strip()
+        forms = set()
+        if len(lemma) < 2:
+            return []
+        for suffix in cls.NOUN_SUFFIXES:
+            if not lemma.endswith(suffix):
+                forms.add(lemma + suffix)
         return list(forms)
 
 
@@ -315,79 +331,102 @@ def populate_staging(db_name=DB_NAME):
     else:
         log_warning("Aparajeyo BN-EN abedb file not found!")
 
-    # 4. Ingest BanglaAcademy SQLite DBs (Resilient, auto-detecting column structures)
-    ba_records = []
-    ba_dir = 'BanglaAcademy'
-    if os.path.exists(ba_dir) and os.path.isdir(ba_dir):
-        log_info("Scanning for Bangla Academy SQLite databases in './BanglaAcademy'...")
-        ba_files = [f for f in os.listdir(ba_dir) if f.endswith(('.db', '.sqlite', '.sqlite3'))]
-        for ba_file in ba_files:
-            ba_path = os.path.join(ba_dir, ba_file)
-            log_info(f"Processing database: '{ba_path}'")
+    # 4. Ingest Ankur CSV
+    ankur_path = 'Ankur/ankur_dictionary.csv'
+    ankur_records = []
+    if os.path.exists(ankur_path):
+        log_info("Reading Ankur CSV...")
+        with open(ankur_path, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            next(reader, None) # skip header
+            for row in reader:
+                if len(row) >= 2 and row[0].strip() and row[1].strip():
+                    ankur_records.append((
+                        'Ankur',
+                        'GPL',
+                        row[0].strip(),
+                        'en-bn',
+                        None,
+                        row[1].strip(),
+                        None
+                    ))
+        log_info(f"Parsed {len(ankur_records):,} records from Ankur CSV.")
+    else:
+        log_warning("Ankur CSV not found at 'Ankur/ankur_dictionary.csv'!")
+
+    # 5. Ingest Wiktionary JSON
+    wiktionary_path = 'Wiktionary/wiktionary_dictionary.json'
+    wiktionary_records = []
+    if os.path.exists(wiktionary_path):
+        log_info("Reading Wiktionary JSON...")
+        with open(wiktionary_path, 'r', encoding='utf-8') as f:
             try:
-                ba_conn = sqlite3.connect(ba_path)
-                ba_cursor = ba_conn.cursor()
-                ba_cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-                tables = [t[0] for t in ba_cursor.fetchall() if t[0] != 'sqlite_sequence']
-                
-                for table in tables:
-                    ba_cursor.execute(f"PRAGMA table_info({table})")
-                    columns_info = ba_cursor.fetchall()
-                    columns = [col[1].lower() for col in columns_info]
+                w_data = json.load(f)
+                for item in w_data:
+                    word = item.get('word', '').strip()
+                    pos = item.get('pos', '').strip()
+                    pron = item.get('pronunciation', '').strip()
+                    meanings = ", ".join(item.get('meanings', []))
+                    syns = ", ".join(item.get('synonyms', []))
+                    ex_en = item.get('example_en', '').strip()
+                    ex_bn = item.get('example_bn', '').strip()
                     
-                    # Look for candidate columns
-                    word_candidates = ['word', 'headword', 'lemma', 'english', 'en_word', 'en']
-                    meaning_candidates = ['meaning', 'definition', 'bangla', 'bn_word', 'bn', 'translation', 'sense_text_raw']
-                    pos_candidates = ['pos', 'pos_raw', 'part_of_speech']
-                    ex_candidates = ['example', 'example_raw', 'example_text', 'usage']
-                    
-                    word_col = next((c for c in columns if c in word_candidates), None)
-                    meaning_col = next((c for c in columns if c in meaning_candidates), None)
-                    
-                    if word_col and meaning_col:
-                        pos_col = next((c for c in columns if c in pos_candidates), None)
-                        ex_col = next((c for c in columns if c in ex_candidates), None)
-                        
-                        log_info(f"Auto-detected valid table '{table}' in '{ba_file}' (word='{word_col}', meaning='{meaning_col}')")
-                        
-                        # Fetch actual case columns
-                        actual_word_col = columns_info[columns.index(word_col)][1]
-                        actual_meaning_col = columns_info[columns.index(meaning_col)][1]
-                        actual_pos_col = columns_info[columns.index(pos_col)][1] if pos_col else "NULL"
-                        actual_ex_col = columns_info[columns.index(ex_col)][1] if ex_col else "NULL"
-                        
-                        query_str = f"SELECT {actual_word_col}, {actual_meaning_col}, {actual_pos_col}, {actual_ex_col} FROM {table}"
-                        ba_cursor.execute(query_str)
-                        
-                        tbl_count = 0
-                        for row in ba_cursor.fetchall():
-                            word_val = row[0]
-                            meaning_val = row[1]
-                            pos_val = row[2]
-                            ex_val = row[3]
-                            
-                            if word_val and meaning_val and str(word_val).strip() and str(meaning_val).strip():
-                                word_str = str(word_val).strip()
-                                direction = 'en-bn' if bool(re.match(r'^[a-zA-Z]', word_str)) else 'bn-en'
-                                ba_records.append((
-                                    'BanglaAcademy',
-                                    'Creative Commons / Open Source',
-                                    word_str,
-                                    direction,
-                                    str(pos_val).strip() if pos_val and str(pos_val).strip().lower() != 'null' else None,
-                                    str(meaning_val).strip(),
-                                    str(ex_val).strip() if ex_val and str(ex_val).strip().lower() != 'null' else None
-                                ))
-                                tbl_count += 1
-                        log_info(f"Imported {tbl_count:,} records from table '{table}'.")
-                ba_conn.close()
+                    # format example string with bilingual and synonym info if available
+                    ex_str = ""
+                    if pron:
+                        ex_str += f"pron: {pron} | "
+                    if ex_en:
+                        ex_str += f"en: {ex_en}"
+                        if ex_bn:
+                            ex_str += f" | bn: {ex_bn}"
+                    if syns:
+                        if ex_str and ex_str != f"pron: {pron} | ":
+                             ex_str += f" [syns: {syns}]"
+                        else:
+                             ex_str += f"[syns: {syns}]"
+                             
+                    if word and meanings:
+                        wiktionary_records.append((
+                            'Wiktionary',
+                            'CC-BY-SA 3.0',
+                            word,
+                            'en-bn',
+                            pos if pos else None,
+                            meanings,
+                            ex_str if ex_str else None
+                        ))
             except Exception as e:
-                log_error(f"Failed to read database '{ba_path}': {e}")
-        if ba_records:
-            log_success(f"Parsed {len(ba_records):,} total records from BanglaAcademy SQLite database(s)!")
+                log_error(f"Failed to parse Wiktionary JSON: {e}")
+        log_info(f"Parsed {len(wiktionary_records):,} records from Wiktionary JSON.")
+    else:
+        log_warning("Wiktionary JSON not found at 'Wiktionary/wiktionary_dictionary.json'!")
+
+    # 6. Ingest Hunspell DIC
+    hunspell_path = 'Hunspell/bangla_spelling.dic'
+    hunspell_records = []
+    if os.path.exists(hunspell_path):
+        log_info("Reading Hunspell DIC...")
+        with open(hunspell_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            for line in lines[1:]:
+                word = line.strip().split('/')[0].strip() # strip flags
+                if word:
+                    # Ingest Hunspell as verified spelling reference
+                    hunspell_records.append((
+                        'Hunspell',
+                        'LGPL',
+                        word,
+                        'bn-en',
+                        None,
+                        'Verified Spelling Lemma',
+                        None
+                    ))
+        log_info(f"Parsed {len(hunspell_records):,} records from Hunspell DIC.")
+    else:
+        log_warning("Hunspell DIC not found at 'Hunspell/bangla_spelling.dic'!")
 
     # Perform bulk inserts in transaction for high performance
-    all_records = minhas_records + ridmik_records + aparajeyo_records + ba_records
+    all_records = minhas_records + ridmik_records + aparajeyo_records + ankur_records + wiktionary_records + hunspell_records
     if all_records:
         log_info(f"Inserting {len(all_records):,} raw records into source_ingestion table...")
         cursor.executemany("""
@@ -461,8 +500,22 @@ def build_master_lexicon(db_name=DB_NAME):
     cursor.execute("SELECT ingestion_id, source_name, pos_raw, sense_text_raw, example_raw FROM source_ingestion")
     ingestion_map = {row[0]: row[1:] for row in cursor.fetchall()}
     
+    # Source Priority Map (Lower value = higher priority)
+    SOURCE_PRIORITY = {
+        'CuratedContexts': 1,
+        'Wiktionary': 2,
+        'Ridmik': 3,
+        'MinhasKamal': 4,
+        'Aparajeyo': 5,
+        'Ankur': 6,
+        'Hunspell': 7
+    }
+    
     for raw_hw, direction, ingestion_ids_str in groups:
         ids = [int(x) for x in ingestion_ids_str.split(',')]
+        
+        # Sort ids by source priority
+        ids = sorted(ids, key=lambda idx: SOURCE_PRIORITY.get(ingestion_map[idx][0], 99))
         
         lemma = raw_hw.replace('|', '').strip()
         normalized_lemma = normalizer.normalize(lemma) if direction == 'bn-en' else lemma.strip().lower()
@@ -492,11 +545,33 @@ def build_master_lexicon(db_name=DB_NAME):
                 })
                 
         # Now process standard raw records
+        active_source = None
+        if senses:
+            # CuratedContexts already loaded
+            active_source = "CuratedContexts"
+            
         for ing_id in ids:
             source, pos_raw, sense_raw, ex_raw = ingestion_map[ing_id]
+            
+            # Skip lower priority sources if we already have senses from a higher priority source
+            if active_source is not None and source != active_source:
+                continue
+                
             sources.add(source)
             pos_label = pos_raw if pos_raw else "unk"
             pos_list.add(pos_label)
+            
+            # Extract pronunciation if embedded in example
+            pron_val = ""
+            ex_clean = ex_raw if ex_raw else ""
+            if ex_clean.startswith("pron: "):
+                parts = ex_clean.split(" | ", 1)
+                if len(parts) == 2:
+                    pron_val = parts[0].replace("pron: ", "").strip()
+                    ex_clean = parts[1].strip()
+                else:
+                    pron_val = ex_clean.replace("pron: ", "").strip()
+                    ex_clean = ""
             
             # If lookup direction is en-bn, strip out Latin characters and punctuation artifacts
             if direction == 'en-bn':
@@ -540,19 +615,23 @@ def build_master_lexicon(db_name=DB_NAME):
                 'sense_id': len(senses) + 1,
                 'pos': pos_label,
                 'meanings': cleaned_meanings,
-                'example': ex_raw if ex_raw else "",
+                'example': ex_clean,
+                'pronunciation': pron_val,
                 'source': source
             })
+            active_source = source
             
         # Determine dominant POS
         dominant_pos = ", ".join(list(pos_list))
         
-        # Generate English Inflections if Lookup direction is en-bn
+        # Generate Inflections
         inflections = []
         if direction == 'en-bn':
             for p in pos_list:
                 inflections.extend(morph_engine.generate_inflections(lemma, p))
             inflections = list(set(inflections))  # Deduplicate
+        elif direction == 'bn-en':
+            inflections = BanglaMorphologyEngine.generate_inflections(lemma)
             
         batch.append((
             lemma,
@@ -587,17 +666,28 @@ class KindleDictionaryCompiler:
         self.db_name = db_name
         self.entries_per_shard = entries_per_shard
         
+        # Load version from version.json
+        version = "1.2.0"
+        try:
+            version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
+            if os.path.exists(version_path):
+                with open(version_path, 'r', encoding='utf-8') as f:
+                    version = json.load(f).get('version', '1.2.0')
+        except Exception:
+            pass
+        self.version = version
+
         # Direction specific metadata
         if direction == 'en-bn':
             self.input_lang = 'en'
             self.output_lang = 'bn'
             self.index_name = 'english'
-            self.title = "High-Quality English-to-Bangla Kindle Dictionary"
+            self.title = f"Shobdo Vandar English-to-Bangla Dictionary v{self.version}"
         else:
             self.input_lang = 'bn'
             self.output_lang = 'en'
             self.index_name = 'bangla'
-            self.title = "Advanced Bangla-to-English Learner's Dictionary"
+            self.title = f"Shobdo Vandar Bangla-to-English Dictionary v{self.version}"
             
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -606,19 +696,20 @@ class KindleDictionaryCompiler:
         css_path = os.path.join(self.output_dir, 'stylesheet.css')
         with open(css_path, 'w', encoding='utf-8') as f:
             f.write("""
-            /* Clean styling for e-ink devices */
-            body { font-family: sans-serif; margin: 0; padding: 5px; }
-            h2 { font-size: 1.25em; margin: 0 0 5px 0; font-weight: bold; }
+            /* Georgia-serif e-ink popover styling */
+            body { font-family: Georgia, serif; margin: 0; padding: 2px 4px; line-height: 1.25; }
+            h2 { font-size: 1.15em; margin: 0 0 2px 0; font-weight: bold; }
             p { margin: 2px 0; }
-            ol { margin: 5px 0 5px 20px; padding: 0; }
-            li { margin-bottom: 6px; }
-            .pos { font-style: italic; color: #555; font-size: 0.9em; }
-            .context { font-style: italic; color: #555; font-weight: bold; }
+            ol { margin: 3px 0 3px 15px; padding: 0; }
+            li { margin-bottom: 3px; padding-left: 2px; }
+            .pron { color: #666; font-size: 0.85em; font-family: sans-serif; margin-left: 5px; }
+            .pos { font-style: italic; color: #555; font-size: 0.85em; }
+            .context { font-style: italic; color: #555; font-weight: bold; font-size: 0.85em; }
             .example { font-style: italic; color: #444; margin-left: 10px; }
             .example-en { font-style: italic; color: #444; display: block; margin-left: 10px; margin-top: 2px; }
             .example-bn { color: #005580; display: block; margin-left: 25px; font-size: 0.95em; }
             .attributions { font-size: 0.75em; color: #777; margin-top: 10px; }
-            hr { border: 0; border-top: 1px solid #ccc; margin: 8px 0; }
+            hr { border: 0; border-top: 1px solid #ddd; margin: 6px 0; }
             """)
         log_info(f"Written: {css_path}")
 
@@ -633,6 +724,13 @@ class KindleDictionaryCompiler:
             for infl in inflections:
                 inflections_xml += f'      <idx:iform value="{xml_escape(infl)}"/>\n'
             inflections_xml += '    </idx:infl>\n'
+            
+        # Check if we have a pronunciation in any sense
+        pron_xml = ""
+        for s in senses:
+            if s.get('pronunciation'):
+                pron_xml = f' <span class="pron">{xml_escape(s["pronunciation"])}</span>'
+                break
             
         # Build senses body HTML
         senses_html = ""
@@ -674,7 +772,7 @@ class KindleDictionaryCompiler:
         <idx:entry name="{self.index_name}" scriptable="yes" spell="yes">
           <idx:short>
             <idx:orth value="{escaped_lemma}">
-              <b>{escaped_lemma}</b>
+              <b>{escaped_lemma}</b>{pron_xml}
 {inflections_xml}            </idx:orth>
             {senses_html}
           </idx:short>
@@ -760,8 +858,8 @@ class KindleDictionaryCompiler:
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
     <dc:title>{self.title}</dc:title>
     <dc:language>{self.input_lang}</dc:language>
-    <dc:creator>Bilingual Lexicography Compiler</dc:creator>
-    <dc:publisher>Shondo vandar Project</dc:publisher>
+    <dc:creator>Tahmid</dc:creator>
+    <dc:publisher>Shobdo Vandar v{self.version}</dc:publisher>
     
     <!-- Kindle Dictionary Metadata Declarations -->
     <meta name="BookType" content="dictionary"/>
@@ -769,6 +867,7 @@ class KindleDictionaryCompiler:
       <DictionaryInLanguage>{self.input_lang}</DictionaryInLanguage>
       <DictionaryOutLanguage>{self.output_lang}</DictionaryOutLanguage>
       <DefaultLookupIndex>{self.index_name}</DefaultLookupIndex>
+      <meta name="dictionary_version" content="{self.version}"/>
     </x-metadata>
   </metadata>
   
@@ -873,6 +972,13 @@ def preview_entry(lemma, db_name=DB_NAME):
     senses = json.loads(senses_json)
     inflections = json.loads(inflections_json) if inflections_json else []
     
+    # Extract pronunciation if present in any sense
+    pron_val = ""
+    for s in senses:
+        if s.get('pronunciation'):
+            pron_val = f" {Colors.BLUE}{s['pronunciation']}{Colors.END}"
+            break
+            
     primary_sense = senses[0] if senses else {}
     primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
     secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
@@ -880,7 +986,7 @@ def preview_entry(lemma, db_name=DB_NAME):
     
     # 1. RENDER POPUP BUBBLE
     print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ]──────────────────────────────────┐{Colors.END}")
-    print(f"│  {Colors.BOLD}{lemma:<25}{Colors.END} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
+    print(f"│  {Colors.BOLD}{lemma:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
     print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
     if inflections:
         print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
@@ -889,7 +995,7 @@ def preview_entry(lemma, db_name=DB_NAME):
     
     # 2. RENDER FULL PAGE VIEW
     print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ]─────────────────────────────────┐{Colors.END}")
-    print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma.upper()}{Colors.END} {Colors.CYAN}({pos}){Colors.END}")
+    print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
     print(f"│  Attributed Sources: {sources}")
     print("│")
     print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
@@ -911,6 +1017,15 @@ def preview_entry(lemma, db_name=DB_NAME):
     print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
     
 def print_banner():
+    version = "1.2.0"
+    try:
+        version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
+        if os.path.exists(version_path):
+            with open(version_path, 'r', encoding='utf-8') as f:
+                version = json.load(f).get('version', '1.2.0')
+    except Exception:
+        pass
+
     banner = f"""
 {Colors.CYAN}██████╗ ██╗██╗     ██╗███╗   ██╗ ██████╗ ██╗   ██╗ █████╗ ██╗     
 ██╔══██╗██║██║     ██║████╗  ██║██╔════╝ ██║   ██║██╔══██╗██║     
@@ -924,7 +1039,7 @@ def print_banner():
      ██║   ██║██║        ██║   ██║██║   ██║██║╚██╗██║██╔══██║██╔══██╗  ██║ 
      ╚██████╔╝╚██████╗   ██║   ██║╚██████╔╝██║ ╚████║██║  ██║██║  ██║ ╔██╝ 
       ╚═════╝  ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝ ╔═╝  
-                    - Standalone CLI Dictionary Builder -{Colors.END}
+                  - Standalone CLI Dictionary Builder v{version} -{Colors.END}
 """
     print(banner)
 
@@ -1053,8 +1168,22 @@ def main():
         
         # 3. Auto-compile MOBI files if tools are available
         log_step(5, "Auto-Compiling MOBI E-Books")
-        en_bn_mobi = os.path.join(BUILD_DIR, 'en-bn', 'en-bn.mobi')
-        bn_en_mobi = os.path.join(BUILD_DIR, 'bn-en', 'bn-en.mobi')
+        
+        # Load version from version.json
+        version = "1.2.0"
+        try:
+            version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
+            if os.path.exists(version_path):
+                with open(version_path, 'r', encoding='utf-8') as f:
+                    version = json.load(f).get('version', '1.2.0')
+        except Exception:
+            pass
+            
+        en_bn_filename = f"Shobdo_Vandar_en-bn_v{version}.mobi"
+        bn_en_filename = f"Shobdo_Vandar_bn-en_v{version}.mobi"
+        
+        en_bn_mobi = os.path.join(BUILD_DIR, 'en-bn', en_bn_filename)
+        bn_en_mobi = os.path.join(BUILD_DIR, 'bn-en', bn_en_filename)
         
         # Explicitly delete old MOBI files if they exist to prevent false-positive success reports
         for path in [en_bn_mobi, bn_en_mobi]:
@@ -1085,8 +1214,8 @@ def main():
             print()
         else:
             print(f"\n{Colors.BOLD}{Colors.GREEN}👉 To build MOBI e-books, compile using Kindle Previewer or run:{Colors.END}")
-            print(f"   kindlegen ./build/en-bn/dict.opf -o en-bn.mobi")
-            print(f"   kindlegen ./build/bn-en/dict.opf -o bn-en.mobi\n")
+            print(f"   kindlegen ./build/en-bn/dict.opf -o {en_bn_filename}")
+            print(f"   kindlegen ./build/bn-en/dict.opf -o {bn_en_filename}\n")
 
 if __name__ == '__main__':
     try:

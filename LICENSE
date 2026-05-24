@@ -28,10 +28,12 @@ This repository contains database compilation pipelines that ingest, consolidate
 
 The raw dictionary data and vocabularies remain the intellectual properties of their respective authors and projects:
 
-1. **Aparajeyo Dictionary:** Ingested and parsed under its respective open-source licensing.
-2. **MinhasKamal (Bangla Dictionary):** Ingested and structured under its respective open-source licensing.
-3. **Ridmik Dictionary:** Ingested and formatted under its respective open-source licensing.
-4. **Bangla Academy Reference Mappings:** Used for standard grammatical and lexical validation references.
+1. **Aparajeyo Dictionary:** Compiled English-to-Bangla and Bangla-to-English dictionary by Nazmul Hossain Nihal and the [Aparajeyo Bangla Express Community](https://facebook.com/groups/aparajeyobangla).
+2. **MinhasKamal (Bangla Dictionary):** Large-scale English-to-Bangla translation mappings from the MIT-licensed [MinhasKamal/BengaliDictionary](https://github.com/MinhasKamal/BengaliDictionary) repository.
+3. **Ridmik Dictionary:** High-quality Bangla-to-English word list mappings by Ridmik Labs, creators of the open-source [Ridmik Keyboard](https://github.com/ridmik).
+4. **Ankur Dictionary:** English-to-Bangla translation terminology database compiled by the open-source [Ankur Bangla Project](http://www.ankur.org.bd/) (distributed under the GPL License).
+5. **Wiktionary Bilingual Dataset:** Collaborative community-driven definitions and bilingual translations from [Wiktionary](https://www.wiktionary.org/) (distributed under the CC-BY-SA 3.0 License).
+6. **Hunspell Spelling Dictionary:** Standardized Bengali spell-checker lemmas and orthographical reference definitions from [Hunspell](https://hunspell.github.io/) / [hunspell-bn](https://github.com/tushar-rishav/hunspell-bn) (distributed under the LGPL/GPL License).
 
 ---
 

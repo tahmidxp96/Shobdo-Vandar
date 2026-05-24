@@ -1,0 +1,218 @@
+[
+  {
+    "word": "abandon",
+    "pos": "verb",
+    "pronunciation": "/əˈbændən/",
+    "meanings": ["বর্জন করা", "পরিত্যাগ করা"],
+    "synonyms": ["leave", "desert", "forsake"],
+    "example_en": "They had to abandon the sinking ship.",
+    "example_bn": "তারা ডুবন্ত জাহাজটি পরিত্যাগ করতে বাধ্য হয়েছিল।"
+  },
+  {
+    "word": "benevolent",
+    "pos": "adjective",
+    "pronunciation": "/bəˈnɛvələnt/",
+    "meanings": ["পরোপকারী", "হিতৈষী", "দয়ালু"],
+    "synonyms": ["kind", "generous", "charitable"],
+    "example_en": "He is known for his benevolent nature.",
+    "example_bn": "তিনি তাঁর পরোপকারী স্বভাবের জন্য পরিচিত।"
+  },
+  {
+    "word": "courage",
+    "pos": "noun",
+    "pronunciation": "/ˈkʌrɪdʒ/",
+    "meanings": ["সাহস", "বীরত্ব"],
+    "synonyms": ["bravery", "valor", "boldness"],
+    "example_en": "It takes courage to speak the truth.",
+    "example_bn": "সত্য কথা বলতে সাহসের প্রয়োজন হয়।"
+  },
+  {
+    "word": "diligent",
+    "pos": "adjective",
+    "pronunciation": "/ˈdɪlɪdʒənt/",
+    "meanings": ["অধ্যবসায়ী", "পরিশ্রমী"],
+    "synonyms": ["hardworking", "industrious", "active"],
+    "example_en": "Success belongs to the diligent student.",
+    "example_bn": "সাফল্য অধ্যবসায়ী ছাত্রের অর্জিত হয়।"
+  },
+  {
+    "word": "eternal",
+    "pos": "adjective",
+    "pronunciation": "/ɪˈtɜːnl/",
+    "meanings": ["চিরন্তন", "অনন্ত", "অক্ষয়"],
+    "synonyms": ["everlasting", "endless", "perpetual"],
+    "example_en": "Hope is an eternal flame.",
+    "example_bn": "আশা একটি চিরন্তন শিখা।"
+  },
+  {
+    "word": "fragile",
+    "pos": "adjective",
+    "pronunciation": "/ˈfrædʒaɪl/",
+    "meanings": ["ভঙ্গুর", "ঠুনকো", "সহজে ভেঙে যায় এমন"],
+    "synonyms": ["delicate", "brittle", "weak"],
+    "example_en": "Handle this fragile glass with care.",
+    "example_bn": "এই ভঙ্গুর কাচটি সাবধানে নাড়াচাড়া করুন।"
+  },
+  {
+    "word": "generous",
+    "pos": "adjective",
+    "pronunciation": "/ˈdʒɛnərəs/",
+    "meanings": ["উদার", "দানশীল", "মহৎ"],
+    "synonyms": ["charitable", "benevolent", "kindhearted"],
+    "example_en": "She gave a generous donation to the library.",
+    "example_bn": "তিনি লাইব্রেরিতে একটি উদার অনুদান দিয়েছিলেন।"
+  },
+  {
+    "word": "harmony",
+    "pos": "noun",
+    "pronunciation": "/ˈhɑːməni/",
+    "meanings": ["একতা", "সাদৃশ্য", "মিল", "সম্প্রীতি"],
+    "synonyms": ["unity", "agreement", "concord"],
+    "example_en": "We must live in harmony with nature.",
+    "example_bn": "আমাদের প্রকৃতির সাথে সম্প্রীতি বজায় রেখে বাস করতে হবে।"
+  },
+  {
+    "word": "innovate",
+    "pos": "verb",
+    "pronunciation": "/ˈɪnəveɪt/",
+    "meanings": ["নতুন কিছু প্রবর্তন করা", "উদ্ভাবন করা"],
+    "synonyms": ["invent", "introduce", "create"],
+    "example_en": "To survive, companies must innovate.",
+    "example_bn": "টিকে থাকতে হলে কোম্পানিগুলোকে নতুন কিছু উদ্ভাবন করতে হবে।"
+  },
+  {
+    "word": "justice",
+    "pos": "noun",
+    "pronunciation": "/ˈdʒʌstɪs/",
+    "meanings": ["ন্যায়বিচার", "বিচার", "ধর্মপরায়ণতা"],
+    "synonyms": ["fairness", "equity", "rightfulness"],
+    "example_en": "Everyone deserves equal justice.",
+    "example_bn": "প্রত্যেকেই সমান ন্যায়বিচার পাওয়ার যোগ্য।"
+  },
+  {
+    "word": "knowledge",
+    "pos": "noun",
+    "pronunciation": "/ˈnɒlɪdʒ/",
+    "meanings": ["জ্ঞান", "বিদ্যা", "পাণ্ডিত্য"],
+    "synonyms": ["wisdom", "learning", "information"],
+    "example_en": "Knowledge is power.",
+    "example_bn": "জ্ঞানই শক্তি।"
+  },
+  {
+    "word": "liberty",
+    "pos": "noun",
+    "pronunciation": "/ˈlɪbəti/",
+    "meanings": ["স্বাধীনতা", "মুক্তি", "অধিকার"],
+    "synonyms": ["freedom", "independence", "emancipation"],
+    "example_en": "Give me liberty, or give me death.",
+    "example_bn": "আমাকে স্বাধীনতা দাও, নতুবা মৃত্যু দাও।"
+  },
+  {
+    "word": "magnificent",
+    "pos": "adjective",
+    "pronunciation": "/mæɡˈnɪfɪsnt/",
+    "meanings": ["চমৎকার", "মহিমান্বিত", "জমকালো"],
+    "synonyms": ["splendid", "gorgeous", "grand"],
+    "example_en": "The sunset was a magnificent sight.",
+    "example_bn": "সূর্যাস্তটি একটি চমৎকার দৃশ্য ছিল।"
+  },
+  {
+    "word": "noble",
+    "pos": "adjective",
+    "pronunciation": "/ˈnəʊbl/",
+    "meanings": ["মহৎ", "অভিজাত", "উদার"],
+    "synonyms": ["dignified", "generous", "honorable"],
+    "example_en": "It was a noble deed.",
+    "example_bn": "এটি একটি মহৎ কাজ ছিল।"
+  },
+  {
+    "word": "opportunity",
+    "pos": "noun",
+    "pronunciation": "/ˌɒpəˈtjuːnəti/",
+    "meanings": ["সুযোগ", "সুবিধা", "উপযুক্ত সময়"],
+    "synonyms": ["chance", "opening", "occasion"],
+    "example_en": "Do not miss this opportunity.",
+    "example_bn": "এই সুযোগটি হাতছাড়া করবেন না।"
+  },
+  {
+    "word": "passionate",
+    "pos": "adjective",
+    "pronunciation": "/ˈpæʃənət/",
+    "meanings": ["আবেগপূর্ণ", "উত্সাহী"],
+    "synonyms": ["enthusiasm", "passion", "ardor"],
+    "example_en": "He is passionate about music.",
+    "example_bn": "তিনি সঙ্গীত সম্পর্কে অত্যন্ত উত্সাহী।"
+  },
+  {
+    "word": "quench",
+    "pos": "verb",
+    "pronunciation": "/kwɛntʃ/",
+    "meanings": ["তৃষ্ণা নিবারণ করা", "নেভানো", "উপশম করা"],
+    "synonyms": ["satisfy", "extinguish", "suppress"],
+    "example_en": "Cold water can quench your thirst.",
+    "example_bn": "ঠান্ডা জল আপনার তৃষ্ণা নিবারণ করতে পারে।"
+  },
+  {
+    "word": "resilient",
+    "pos": "adjective",
+    "pronunciation": "/rɪˈzɪliənt/",
+    "meanings": ["স্থিতিস্থাপক", "সহজে হাল ছাড়ে না এমন"],
+    "synonyms": ["flexible", "tough", "recovering"],
+    "example_en": "The economy proved to be resilient.",
+    "example_bn": "অর্থনীতি স্থিতিস্থাপক বলে প্রমাণিত হয়েছে।"
+  },
+  {
+    "word": "sincere",
+    "pos": "adjective",
+    "pronunciation": "/sɪnˈsɪə/",
+    "meanings": ["আন্তরিক", "খাঁটি", "অকপটে দুঃখিত"],
+    "synonyms": ["honest", "genuine", "heartfelt"],
+    "example_en": "Accept my sincere apology.",
+    "example_bn": "আমার আন্তরিক দুঃখপ্রকাশ গ্রহণ করুন।"
+  },
+  {
+    "word": "triumph",
+    "pos": "noun",
+    "pronunciation": "/ˈtraɪʌmf/",
+    "meanings": ["বিজয়", "জয়লাভ", "মহাসফলতা"],
+    "synonyms": ["victory", "conquest", "success"],
+    "example_en": "Their final victory was a great triumph.",
+    "example_bn": "তাদের চূড়ান্ত জয় ছিল একটি বিরাট মহাসফলতা।"
+  },
+  {
+    "word": "unique",
+    "pos": "adjective",
+    "pronunciation": "/juˈniːk/",
+    "meanings": ["অনন্য", "অতুলনীয়", "স্বতন্ত্র"],
+    "synonyms": ["distinctive", "peerless", "unrivaled"],
+    "example_en": "Each person has a unique personality.",
+    "example_bn": "প্রতিটি মানুষের একটি অনন্য ব্যক্তিত্ব থাকে।"
+  },
+  {
+    "word": "vivid",
+    "pos": "adjective",
+    "pronunciation": "/ˈvɪvɪd/",
+    "meanings": ["উজ্জ্বল", "প্রাণবন্ত", "স্পষ্ট"],
+    "synonyms": ["bright", "lively", "clear"],
+    "example_en": "I have a vivid memory of that childhood day.",
+    "example_bn": "আমার শৈশবের সেই দিনের একটি স্পষ্ট স্মৃতি রয়েছে।"
+  },
+  {
+    "word": "wisdom",
+    "pos": "noun",
+    "pronunciation": "/ˈwɪzdəm/",
+    "meanings": ["প্রজ্ঞা", "জ্ঞান", "বিচক্ষণতা"],
+    "synonyms": ["intelligence", "learning", "insight"],
+    "example_en": "Wisdom is better than riches.",
+    "example_bn": "প্রজ্ঞা সম্পদের চেয়েও উত্তম।"
+  },
+  {
+    "word": "zeal",
+    "pos": "noun",
+    "pronunciation": "/ziːl/",
+    "meanings": ["উদ্যম", "প্রবল আগ্রহ", "নিষ্ঠা"],
+    "synonyms": ["enthusiasm", "passion", "ardor"],
+    "example_en": "She worked with great zeal.",
+    "example_bn": "তিনি অত্যন্ত উদ্যমের সাথে কাজ করেছিলেন।"
+  }
+]

@@ -33,22 +33,23 @@ This diagram illustrates how raw source lexicons are ingested, consolidated, for
 
  [ Raw Lexicons ]        [ Normalization & DB ]         [ Document Generation ]
  ┌──────────────┐        ┌────────────────────┐         ┌─────────────────────┐
- │ MinhasKamal  │───────>│                    │         │  XHTML Sharding     │
- └──────────────┘        │                    │         │  (Max 1000 entries) │
- ┌──────────────┐        │                    │         │  ┌────────────────┐ │
- │  Aparajeyo   │───────>│ kindle_dictionary_ │────────>│  │ content_N.html │ │
- └──────────────┘        │     builder.py     │         │  └────────────────┘ │
- ┌──────────────┐        │                    │         │  - xmlns:idx markup │
- │    Ridmik    │───────>│                    │         │  - <idx:entry> tags │
- └──────────────┘        │                    │         └──────────┬──────────┘
- ┌──────────────┐        │                    │                    │
- │ Bangla Acad. │───────>│  - SQLite Staging  │                    ▼
- └──────────────┘        │    (lexicon.db)    │         ┌─────────────────────┐
-                         │  - Deduplication   │         │ OPF Meta / Nav XML  │
-                         │  - Normalization   │         │ - dict.opf          │
-                         └────────────────────┘         │ - <x-metadata> tags │
-                                                        │ - nav.html          │
-                                                        └──────────┬──────────┘
+ │ MinhasKamal  │───┐    │                    │         │  XHTML Sharding     │
+ └──────────────┘   │    │                    │         │  (Max 1000 entries) │
+ ┌──────────────┐   │    │                    │         │  ┌────────────────┐ │
+ │  Aparajeyo   │───┼───>│ kindle_dictionary_ │────────>│  │ content_N.html │ │
+ └──────────────┘   │    │     builder.py     │         │  └────────────────┘ │
+ ┌──────────────┐   │    │                    │         │  - xmlns:idx markup │
+ │    Ridmik    │───┤    │                    │         │  - <idx:entry> tags │
+ └──────────────┘   │    │  - SQLite Staging  │         └──────────┬──────────┘
+ ┌──────────────┐   │    │    (lexicon.db)    │                    │
+ │    Ankur     │───┤    │  - Deduplication   │                    ▼
+ └──────────────┘   │    │  - Normalization   │         ┌─────────────────────┐
+ ┌──────────────┐   │    └────────────────────┘         │ OPF Meta / Nav XML  │
+ │  Wiktionary  │───┤                                   │ - dict.opf          │
+ └──────────────┘   │                                   │ - <x-metadata> tags │
+ ┌──────────────┐   │                                   │ - nav.html          │
+ │   Hunspell   │───┘                                   └──────────┬──────────┘
+ └──────────────┘
                                                                    │
                                                                    ▼
  [ Compiler Invocation ]                                [ Distribution ]
@@ -155,17 +156,19 @@ If you want to modify source definitions, add custom glossaries, or run the comp
 
 The builder compiles custom bilingual dictionaries by normalising data across multiple staging references:
 
-| Source | Records Processed | Translation Pathway | Primary Lexical Characteristics |
-| :--- | :--- | :--- | :--- |
-| **Aparajeyo** | 186,776 | English ➔ Bangla | Comprehensive synonym groups and parts of speech |
-| **MinhasKamal** | 93,421 | English ➔ Bangla | Standard colloquial vocabulary mapping |
-| **Ridmik** | 13,474 | Bangla ➔ English | Standardized lexical mappings |
-| **Bangla Academy** | Reference | Both | Direct orthographical and spelling validations |
+| Source | Records Processed | Translation Pathway | Primary Lexical Characteristics | Link | License |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Aparajeyo** | 186,776 | English ➔ Bangla | Comprehensive synonym groups and parts of speech | [Aparajeyo Community](https://facebook.com/groups/aparajeyobangla) | Open Source |
+| **MinhasKamal** | 93,421 | English ➔ Bangla | Standard colloquial vocabulary mapping | [MinhasKamal/BengaliDictionary](https://github.com/MinhasKamal/BengaliDictionary) | MIT License |
+| **Ridmik** | 13,474 | Bangla ➔ English | Standardized lexical mappings | [Ridmik Keyboard](https://github.com/ridmik) | MIT License |
+| **Ankur** | 1,984 | English ➔ Bangla | Traditional terminology vocabulary | [Ankur Project](http://www.ankur.org.bd/) | GPL License |
+| **Wiktionary** | 24 | English ➔ Bangla | Collaborative contextual examples & POS tags | [Wiktionary](https://www.wiktionary.org/) | CC-BY-SA 3.0 |
+| **Hunspell** | 30 | Bangla ➔ English | Orthographical verified spelling lemmas | [Hunspell BN](https://github.com/tushar-rishav/hunspell-bn) | LGPL / GPL |
 
 ### Consolidated Output Statistics:
-* **Bangla-to-English (`bn-en`)**: `50,919` unique entries
-* **English-to-Bangla (`en-bn`)**: `94,347` unique entries
-* **Total Combined Database**: **`145,266`** deduplicated, high-fidelity words
+* **Bangla-to-English (`bn-en`)**: `50,928` unique entries
+* **English-to-Bangla (`en-bn`)**: `94,348` unique entries
+* **Total Combined Database**: **`145,276`** deduplicated, high-fidelity words
 
 ---
 
@@ -183,4 +186,11 @@ Whenever a release version tag (e.g., `v1.2.0`) is pushed to the repository:
 
 ## 📄 License & Attribution
 
-All raw lexicographical resources remain the intellectual property of their respective authors and projects (Aparajeyo, MinhasKamal, Ridmik, and Bangla Academy). The builder and compilation pipeline scripts are distributed under the **MIT License**.
+The builder and compilation pipeline scripts are distributed under the **MIT License**. All raw lexicographical resources remain the intellectual property of their respective authors and projects:
+
+* **MinhasKamal (Bangla Dictionary):** Large-scale English-to-Bangla translation mappings hosted at the [MinhasKamal/BengaliDictionary](https://github.com/MinhasKamal/BengaliDictionary) repository (licensed under the permissive MIT License).
+* **Aparajeyo Dictionary:** Compiled English-to-Bangla and Bangla-to-English database compiled by Nazmul Hossain Nihal and the open-source [Aparajeyo Bangla Express Community](https://facebook.com/groups/aparajeyobangla).
+* **Ridmik Dictionary:** Open-source Bangla-to-English dictionary assets by Ridmik Labs, creators of the open-source [Ridmik Keyboard](https://github.com/ridmik).
+* **Ankur Dictionary:** English-to-Bangla translation terminology database compiled by the open-source [Ankur Bangla Project](http://www.ankur.org.bd/) (distributed under the GPL License).
+* **Wiktionary Bilingual Dataset:** Collaborative community-driven definitions and bilingual translations from [Wiktionary](https://www.wiktionary.org/) (distributed under the CC-BY-SA 3.0 License).
+* **Hunspell Spelling Dictionary:** Standardized Bengali spell-checker lemmas and orthographical reference definitions from [Hunspell](https://hunspell.github.io/) / [hunspell-bn](https://github.com/tushar-rishav/hunspell-bn) (distributed under the LGPL/GPL License).

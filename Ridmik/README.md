@@ -7,7 +7,7 @@ This folder holds the raw word list mapping database for the **Ridmik Keyboard D
 ## ⚖️ License & Attribution
 
 * **Original Creator/Author:** Ridmik Labs (Shamim Hasnath and team)
-* **Original Project Reference:** Part of the open-source dictionary data used in Ridmik Keyboard and Android repositories.
+* **Original Project Reference:** Part of the open-source dictionary data used in Ridmik Keyboard and Android repositories ([Ridmik Labs GitHub](https://github.com/ridmik)).
 * **License:** MIT License / Open Source.
 * **Details:** This raw `dictionary` file contains clean, structured Bangla headwords mapped to their direct English translations.
 
