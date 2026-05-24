@@ -52,8 +52,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/en-bn/en-bn.mobi
-            build/bn-en/bn-en.mobi
+            build/en-bn/*.mobi
+            build/bn-en/*.mobi
           draft: false
           prerelease: false
           generate_release_notes: true
