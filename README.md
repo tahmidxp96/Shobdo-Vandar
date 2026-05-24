@@ -55,7 +55,7 @@ This diagram illustrates how raw source lexicons are ingested, consolidated, for
  ┌────────────────────────────────────────────────┐     ┌─────────────────────┐
  │           Kindle Previewer 3 Toolchain         │     │  Direct Sideload    │
  │  ┌──────────────────────────────────────────┐  │     │  (USB to device)    │
- │  │      Embedded kindlegen Compiler        │  │     └──────────▲──────────┘
+ │  │      Embedded kindlegen Compiler         │  │     └──────────▲──────────┘
  │  └────────────────────┬─────────────────────┘  │                │
  │                       │                        ├────────────────┘
  │                       ▼                        │
