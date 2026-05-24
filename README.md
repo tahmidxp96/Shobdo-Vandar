@@ -1,4 +1,4 @@
-# Shondo vandar (শব্দ ভান্ডার) 📚🇧🇩
+# Shobdo vandar (শব্দ ভান্ডার) 📚🇧🇩
 
 A developer-centric reference project and high-performance compilation pipeline showing how to build custom, search-compliant Kindle bilingual dictionaries from raw lexicographical datasets.
 
