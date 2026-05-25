@@ -48,6 +48,12 @@ jobs:
           # Running without -c triggers raw data ingestion, normalization, and full MOBI compilation
           python3 kindle_dictionary_builder.py
 
+      - name: Extract Latest Changelog Notes
+        run: |
+          echo "Extracting latest changelog block for GitHub Release description..."
+          python3 version_manager.py notes > latest_notes.md
+          cat latest_notes.md
+
       - name: Publish Compiled MOBI Dictionaries to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
@@ -57,7 +63,7 @@ jobs:
             build/bn-bn/*.mobi
           draft: false
           prerelease: false
-          generate_release_notes: true
+          body_path: latest_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

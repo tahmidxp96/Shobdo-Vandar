@@ -67,9 +67,9 @@ This diagram illustrates how raw source lexicons are ingested, consolidated, for
   │                       ▼                        │
   │  ┌──────────────────────────────────────────┐  │     ┌─────────────────────┐
   │  │        High-Fidelity .MOBI Outputs       │──┼────>│   GitHub Releases   │
-  │  │  - Shobdo_Vandar_en-bn_v1.5.0.mobi       │  │     │   (Automated CI)    │
-  │  │  - Shobdo_Vandar_bn-en_v1.5.0.mobi       │  │     └─────────────────────┘
-  │  │  - Shobdo_Vandar_bn-bn_v1.5.0.mobi       │  │
+  │  │  - Shobdo_Vandar_en-bn_v1.5.1.mobi       │  │     │   (Automated CI)    │
+  │  │  - Shobdo_Vandar_bn-en_v1.5.1.mobi       │  │     └─────────────────────┘
+  │  │  - Shobdo_Vandar_bn-bn_v1.5.1.mobi       │  │
   │  └──────────────────────────────────────────┘  │
   └────────────────────────────────────────────────┘
 ```
@@ -94,9 +94,9 @@ You do not need to build these files manually. The compilation pipeline runs aut
 
 1. Navigate to the **[Releases](https://github.com/tahmidxp96/Shobdo-Vandar/releases)** page.
 2. Download the dictionary binary you need from the assets section:
-   * **`Shobdo_Vandar_en-bn_v1.5.0.mobi`** (English-to-Bangla: **94,348 entries**, ~10.4 MB)
-   * **`Shobdo_Vandar_bn-en_v1.5.0.mobi`** (Bangla-to-English: **50,928 entries**, ~6.4 MB)
-   * **`Shobdo_Vandar_bn-bn_v1.5.0.mobi`** (Bangla-to-Bangla: **46,552 entries**, ~9.2 MB)
+   * **`Shobdo_Vandar_en-bn_v1.5.1.mobi`** (English-to-Bangla: **94,348 entries**, ~10.4 MB)
+   * **`Shobdo_Vandar_bn-en_v1.5.1.mobi`** (Bangla-to-English: **50,928 entries**, ~6.4 MB)
+   * **`Shobdo_Vandar_bn-bn_v1.5.1.mobi`** (Bangla-to-Bangla: **46,552 entries**, ~9.2 MB)
 
 ---
 
@@ -111,9 +111,9 @@ To load the compiled dictionaries onto any physical Kindle (including Kindle Pap
    Kindle/
    └── documents/
        └── dictionaries/
-            ├── Shobdo_Vandar_en-bn_v1.5.0.mobi
-            ├── Shobdo_Vandar_bn-en_v1.5.0.mobi
-            └── Shobdo_Vandar_bn-bn_v1.5.0.mobi
+            ├── Shobdo_Vandar_en-bn_v1.5.1.mobi
+            ├── Shobdo_Vandar_bn-en_v1.5.1.mobi
+            └── Shobdo_Vandar_bn-bn_v1.5.1.mobi
    ```
 4. **Safely eject** the Kindle from your computer.
 5. **Activate the Dictionaries:**
@@ -189,7 +189,7 @@ The builder compiles custom dictionaries by normalising data across multiple sta
 
 This repository utilizes GitHub Actions (`.github/workflows/release.yml`) for continuous deployment. 
 
-Whenever a release version tag (e.g., `v1.5.0`) is pushed to the repository:
+Whenever a release version tag (e.g., `v1.5.1`) is pushed to the repository:
 1. A fresh macOS environment is provisioned on GitHub runners.
 2. The latest **Kindle Previewer 3** package is dynamically fetched and installed.
 3. The `kindle_dictionary_builder.py` script initializes the ingestion pipeline, performs standardizations, and runs the MOBI compilation for all three targets.

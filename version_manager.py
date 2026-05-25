@@ -178,6 +178,36 @@ def show_cmd():
     print(f"│  Version : {Colors.GREEN}{Colors.BOLD}v{version:<26}{Colors.END}{Colors.CYAN}│")
     print(f"└────────────────────────────────────────┘{Colors.END}\n")
 
+def notes_cmd():
+    """Prints the latest release notes from CHANGELOG.md for GitHub Releases."""
+    if not os.path.exists(CHANGELOG_FILE):
+        log_error(f"Changelog file '{CHANGELOG_FILE}' not found!")
+        sys.exit(1)
+        
+    try:
+        with open(CHANGELOG_FILE, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        start_idx = content.find("## [")
+        if start_idx == -1:
+            log_error("No release entries starting with '## [' found in CHANGELOG.md!")
+            sys.exit(1)
+            
+        end_idx_1 = content.find("## [", start_idx + 4)
+        end_idx_2 = content.find("---", start_idx + 4)
+        
+        end_candidates = [idx for idx in [end_idx_1, end_idx_2] if idx != -1]
+        if end_candidates:
+            end_idx = min(end_candidates)
+            latest_notes = content[start_idx:end_idx].strip()
+        else:
+            latest_notes = content[start_idx:].strip()
+            
+        print(latest_notes)
+    except Exception as e:
+        log_error(f"Failed to read or parse CHANGELOG.md: {e}")
+        sys.exit(1)
+
 def validate_cmd():
     """Validates the project version files and consistency."""
     success = True
@@ -344,6 +374,9 @@ def main():
     # Validate subcommand
     subparsers.add_parser("validate", help="Validate semver file consistency")
     
+    # Notes subcommand
+    subparsers.add_parser("notes", help="Print latest changelog notes for GitHub Releases")
+    
     # Bump subcommand
     bump_parser = subparsers.add_parser("bump", help="Bump version, update changelog, and tag git")
     bump_parser.add_argument("--type", "-t", choices=['major', 'minor', 'patch'], required=True, help="Semantic increment type")
@@ -357,6 +390,8 @@ def main():
         show_cmd()
     elif args.command == "validate":
         validate_cmd()
+    elif args.command == "notes":
+        notes_cmd()
     elif args.command == "bump":
         bump_cmd(args)
 
