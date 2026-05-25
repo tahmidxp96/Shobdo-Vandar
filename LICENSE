@@ -34,6 +34,7 @@ The raw dictionary data and vocabularies remain the intellectual properties of t
 4. **Ankur Dictionary:** English-to-Bangla translation terminology database compiled by the open-source [Ankur Bangla Project](http://www.ankur.org.bd/) (distributed under the GPL License).
 5. **Wiktionary Bilingual Dataset:** Collaborative community-driven definitions and bilingual translations from [Wiktionary](https://www.wiktionary.org/) (distributed under the CC-BY-SA 3.0 License).
 6. **Hunspell Spelling Dictionary:** Standardized Bengali spell-checker lemmas and orthographical reference definitions from [Hunspell](https://hunspell.github.io/) / [hunspell-bn](https://github.com/tushar-rishav/hunspell-bn) (distributed under the LGPL/GPL License).
+7. **BoiBhai Monolingual Dictionary:** Crowdsourced and collaborative Bengali-to-Bengali monolingual dictionary containing pronunciation, etymology, ontology, and native definition data from [BoiBhai bn-dict-database](https://github.com/BoiBhai/bn-dict-database).
 
 ---
 

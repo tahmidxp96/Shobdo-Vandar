@@ -54,6 +54,7 @@ jobs:
           files: |
             build/en-bn/*.mobi
             build/bn-en/*.mobi
+            build/bn-bn/*.mobi
           draft: false
           prerelease: false
           generate_release_notes: true

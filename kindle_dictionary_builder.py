@@ -425,8 +425,57 @@ def populate_staging(db_name=DB_NAME):
     else:
         log_warning("Hunspell DIC not found at 'Hunspell/bangla_spelling.dic'!")
 
+    # 7. Ingest BoiBhai JSON
+    boibhai_path = 'BoiBhai/boibhai_dictionary.json'
+    boibhai_records = []
+    if os.path.exists(boibhai_path):
+        log_info("Reading BoiBhai JSON...")
+        with open(boibhai_path, 'r', encoding='utf-8') as f:
+            try:
+                b_data = json.load(f)
+                for item in b_data:
+                    word = item.get('word', '').strip()
+                    pos = item.get('pos', '').strip()
+                    pron = item.get('pronunciation', '').strip()
+                    etym = item.get('etymology', '').strip()
+                    meanings = ", ".join(item.get('meanings', []))
+                    syns = ", ".join(item.get('synonyms', []))
+                    ex = item.get('example', '').strip()
+                    
+                    ex_str = ""
+                    if pron:
+                        ex_str += f"pron: {pron} | "
+                    if ex:
+                        ex_str += f"ex: {ex}"
+                    if etym:
+                        if ex_str and ex_str != f"pron: {pron} | ":
+                            ex_str += f" | etym: {etym}"
+                        else:
+                            ex_str += f"etym: {etym}"
+                    if syns:
+                        if ex_str and ex_str != f"pron: {pron} | ":
+                            ex_str += f" [syns: {syns}]"
+                        else:
+                            ex_str += f"[syns: {syns}]"
+                            
+                    if word and meanings:
+                        boibhai_records.append((
+                            'BoiBhai',
+                            'Open Source',
+                            word,
+                            'bn-bn',
+                            pos if pos else None,
+                            meanings,
+                            ex_str if ex_str else None
+                        ))
+            except Exception as e:
+                log_error(f"Failed to parse BoiBhai JSON: {e}")
+        log_info(f"Parsed {len(boibhai_records):,} records from BoiBhai JSON.")
+    else:
+        log_warning("BoiBhai JSON not found at 'BoiBhai/boibhai_dictionary.json'!")
+
     # Perform bulk inserts in transaction for high performance
-    all_records = minhas_records + ridmik_records + aparajeyo_records + ankur_records + wiktionary_records + hunspell_records
+    all_records = minhas_records + ridmik_records + aparajeyo_records + ankur_records + wiktionary_records + hunspell_records + boibhai_records
     if all_records:
         log_info(f"Inserting {len(all_records):,} raw records into source_ingestion table...")
         cursor.executemany("""
@@ -442,11 +491,11 @@ def populate_staging(db_name=DB_NAME):
 
 
 def normalize_meaning(text, direction):
-    """Normalizes definition meanings: Bangla normalization for en-bn, lowercase/punctuation strip for bn-en."""
+    """Normalizes definition meanings: Bangla normalization for en-bn/bn-bn, lowercase/punctuation strip for bn-en."""
     if not text:
         return ""
     text = text.strip()
-    if direction == 'en-bn':
+    if direction in ['en-bn', 'bn-bn']:
         return BanglaNormalizer.normalize(text)
     else:
         text = text.lower()
@@ -504,11 +553,12 @@ def build_master_lexicon(db_name=DB_NAME):
     SOURCE_PRIORITY = {
         'CuratedContexts': 1,
         'Wiktionary': 2,
-        'Ridmik': 3,
-        'MinhasKamal': 4,
-        'Aparajeyo': 5,
-        'Ankur': 6,
-        'Hunspell': 7
+        'BoiBhai': 3,
+        'Ridmik': 4,
+        'MinhasKamal': 5,
+        'Aparajeyo': 6,
+        'Ankur': 7,
+        'Hunspell': 8
     }
     
     for raw_hw, direction, ingestion_ids_str in groups:
@@ -518,7 +568,7 @@ def build_master_lexicon(db_name=DB_NAME):
         ids = sorted(ids, key=lambda idx: SOURCE_PRIORITY.get(ingestion_map[idx][0], 99))
         
         lemma = raw_hw.replace('|', '').strip()
-        normalized_lemma = normalizer.normalize(lemma) if direction == 'bn-en' else lemma.strip().lower()
+        normalized_lemma = normalizer.normalize(lemma) if direction in ['bn-en', 'bn-bn'] else lemma.strip().lower()
         
         senses = []
         pos_list = set()
@@ -630,7 +680,7 @@ def build_master_lexicon(db_name=DB_NAME):
             for p in pos_list:
                 inflections.extend(morph_engine.generate_inflections(lemma, p))
             inflections = list(set(inflections))  # Deduplicate
-        elif direction == 'bn-en':
+        elif direction in ['bn-en', 'bn-bn']:
             inflections = BanglaMorphologyEngine.generate_inflections(lemma)
             
         batch.append((
@@ -683,11 +733,16 @@ class KindleDictionaryCompiler:
             self.output_lang = 'bn'
             self.index_name = 'english'
             self.title = f"Shobdo Vandar English-to-Bangla Dictionary v{self.version}"
-        else:
+        elif direction == 'bn-en':
             self.input_lang = 'bn'
             self.output_lang = 'en'
             self.index_name = 'bangla'
             self.title = f"Shobdo Vandar Bangla-to-English Dictionary v{self.version}"
+        elif direction == 'bn-bn':
+            self.input_lang = 'bn'
+            self.output_lang = 'bn'
+            self.index_name = 'bangla'
+            self.title = f"Shobdo Vandar Bangla-to-Bangla Dictionary v{self.version}"
             
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -933,7 +988,12 @@ def print_statistics(db_name=DB_NAME):
     print(f"\n{Colors.BOLD}📚 Combined Master Lexicon (Deduplicated & Cleaned):{Colors.END}")
     if direction_counts:
         for direction, count in direction_counts:
-            dir_label = "English-to-Bangla (en-bn)" if direction == 'en-bn' else "Bangla-to-English (bn-en)"
+            labels = {
+                'en-bn': "English-to-Bangla (en-bn)",
+                'bn-en': "Bangla-to-English (bn-en)",
+                'bn-bn': "Bangla-to-Bangla (bn-bn)"
+            }
+            dir_label = labels.get(direction, f"Unknown ({direction})")
             print(f"   • {dir_label:<28} : {Colors.GREEN}{count:>8,}{Colors.END} unique entries")
         print(f"   ----------------------------------------------------------------")
         print(f"   • {Colors.BOLD}{'Total Combined Master Entries':<28} : {Colors.GREEN}{total_master:>8,}{Colors.END} unique words")
@@ -952,69 +1012,76 @@ def preview_entry(lemma, db_name=DB_NAME):
     # Check if Bangla or English to determine direction
     # Simple regex check for English characters
     is_english = bool(re.match(r'^[a-zA-Z]', lemma))
-    direction = 'en-bn' if is_english else 'bn-en'
+    directions = ['en-bn'] if is_english else ['bn-en', 'bn-bn']
     
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT lemma, pos, senses_json, inflections_json, source_attributions 
-        FROM master_lexicon 
-        WHERE LOWER(lemma) = ? AND lookup_direction = ?
-    """, (lemma.lower(), direction))
-    row = cursor.fetchone()
-    conn.close()
     
-    if not row:
-        log_error(f"Entry '{lemma}' ({direction}) not found in the master database.")
-        return
+    found_any = False
+    for direction in directions:
+        cursor.execute("""
+            SELECT lemma, pos, senses_json, inflections_json, source_attributions 
+            FROM master_lexicon 
+            WHERE LOWER(lemma) = ? AND lookup_direction = ?
+        """, (lemma.lower(), direction))
+        row = cursor.fetchone()
+        if not row:
+            continue
+            
+        found_any = True
+        lemma_val, pos, senses_json, inflections_json, sources = row
+        senses = json.loads(senses_json)
+        inflections = json.loads(inflections_json) if inflections_json else []
         
-    lemma, pos, senses_json, inflections_json, sources = row
-    senses = json.loads(senses_json)
-    inflections = json.loads(inflections_json) if inflections_json else []
-    
-    # Extract pronunciation if present in any sense
-    pron_val = ""
-    for s in senses:
-        if s.get('pronunciation'):
-            pron_val = f" {Colors.BLUE}{s['pronunciation']}{Colors.END}"
-            break
-            
-    primary_sense = senses[0] if senses else {}
-    primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
-    secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
-    context_tag = f" ({Colors.YELLOW}{primary_sense.get('context')}{Colors.END})" if primary_sense.get('context') else ""
-    
-    # 1. RENDER POPUP BUBBLE
-    print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ]──────────────────────────────────┐{Colors.END}")
-    print(f"│  {Colors.BOLD}{lemma:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
-    print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
-    if inflections:
-        print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
-    print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
-    print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
-    
-    # 2. RENDER FULL PAGE VIEW
-    print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ]─────────────────────────────────┐{Colors.END}")
-    print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
-    print(f"│  Attributed Sources: {sources}")
-    print("│")
-    print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
-    for idx, sense in enumerate(senses):
-        meanings = ", ".join(sense['meanings'])
-        context_str = f" ({Colors.YELLOW}{sense['context']}{Colors.END})" if sense.get('context') else ""
-        print(f"│    {idx+1}. [{Colors.CYAN}{sense['pos']}{Colors.END}]{context_str} {Colors.BOLD}{meanings}{Colors.END}")
-        if sense.get('example_en'):
-            print(f"│       {Colors.GREEN}💬 En: {sense['example_en']}{Colors.END}")
-            if sense.get('example_bn'):
-                print(f"│       {Colors.GREEN}   Bn: {sense['example_bn']}{Colors.END}")
-        elif sense.get('example'):
-            print(f"│       {Colors.GREEN}💬 Example: {sense['example']}{Colors.END}")
-            
-    if inflections:
+        # Extract pronunciation if present in any sense
+        pron_val = ""
+        for s in senses:
+            if s.get('pronunciation'):
+                pron_val = f" {Colors.BLUE}{s['pronunciation']}{Colors.END}"
+                break
+                
+        primary_sense = senses[0] if senses else {}
+        primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
+        secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
+        context_tag = f" ({Colors.YELLOW}{primary_sense.get('context')}{Colors.END})" if primary_sense.get('context') else ""
+        
+        dir_title = "Bangla-to-Bangla (bn-bn)" if direction == 'bn-bn' else ("Bangla-to-English (bn-en)" if direction == 'bn-en' else "English-to-Bangla (en-bn)")
+        
+        # 1. RENDER POPUP BUBBLE
+        print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
+        print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
+        print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
+        if inflections:
+            print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
+        print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
+        print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
+        
+        # 2. RENDER FULL PAGE VIEW
+        print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
+        print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+        print(f"│  Attributed Sources: {sources}")
         print("│")
-        print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
-        print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
-    print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+        print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
+        for idx, sense in enumerate(senses):
+            meanings = ", ".join(sense['meanings'])
+            context_str = f" ({Colors.YELLOW}{sense['context']}{Colors.END})" if sense.get('context') else ""
+            print(f"│    {idx+1}. [{Colors.CYAN}{sense['pos']}{Colors.END}]{context_str} {Colors.BOLD}{meanings}{Colors.END}")
+            if sense.get('example_en'):
+                print(f"│       {Colors.GREEN}💬 En: {sense['example_en']}{Colors.END}")
+                if sense.get('example_bn'):
+                    print(f"│       {Colors.GREEN}   Bn: {sense['example_bn']}{Colors.END}")
+            elif sense.get('example'):
+                print(f"│       {Colors.GREEN}💬 Example: {sense['example']}{Colors.END}")
+                
+        if inflections:
+            print("│")
+            print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
+            print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
+        print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+        
+    conn.close()
+    if not found_any:
+        log_error(f"Entry '{lemma}' not found in the master database.")
     
 def print_banner():
     version = "1.2.0"
@@ -1166,7 +1233,18 @@ def main():
         )
         bn_en_compiler.compile_all()
         
-        # 3. Auto-compile MOBI files if tools are available
+        print("\n" + "="*80 + "\n")
+        
+        # 3. Compile Bangla to Bangla Dictionary
+        bn_bn_compiler = KindleDictionaryCompiler(
+            output_dir=os.path.join(BUILD_DIR, 'bn-bn'),
+            direction='bn-bn',
+            db_name=DB_NAME,
+            entries_per_shard=1000
+        )
+        bn_bn_compiler.compile_all()
+        
+        # 4. Auto-compile MOBI files if tools are available
         log_step(5, "Auto-Compiling MOBI E-Books")
         
         # Load version from version.json
@@ -1181,12 +1259,14 @@ def main():
             
         en_bn_filename = f"Shobdo_Vandar_en-bn_v{version}.mobi"
         bn_en_filename = f"Shobdo_Vandar_bn-en_v{version}.mobi"
+        bn_bn_filename = f"Shobdo_Vandar_bn-bn_v{version}.mobi"
         
         en_bn_mobi = os.path.join(BUILD_DIR, 'en-bn', en_bn_filename)
         bn_en_mobi = os.path.join(BUILD_DIR, 'bn-en', bn_en_filename)
+        bn_bn_mobi = os.path.join(BUILD_DIR, 'bn-bn', bn_bn_filename)
         
         # Explicitly delete old MOBI files if they exist to prevent false-positive success reports
-        for path in [en_bn_mobi, bn_en_mobi]:
+        for path in [en_bn_mobi, bn_en_mobi, bn_bn_mobi]:
             if os.path.exists(path):
                 try:
                     os.remove(path)
@@ -1197,25 +1277,30 @@ def main():
         en_bn_success = compile_mobi(os.path.join(BUILD_DIR, 'en-bn', 'dict.opf'), en_bn_mobi)
         print("\n" + "-"*40 + "\n")
         bn_en_success = compile_mobi(os.path.join(BUILD_DIR, 'bn-en', 'dict.opf'), bn_en_mobi)
+        print("\n" + "-"*40 + "\n")
+        bn_bn_success = compile_mobi(os.path.join(BUILD_DIR, 'bn-bn', 'dict.opf'), bn_bn_mobi)
         
         log_success(f"Entire compilation completed in {time.time() - start:.2f} seconds!")
         
-        # 4. Print detailed counts
+        # 5. Print detailed counts
         log_step(6, "Final Data Reports & Validation")
         print_statistics()
         
         log_success("All pipeline stages completed successfully!")
-        if en_bn_success or bn_en_success:
+        if en_bn_success or bn_en_success or bn_bn_success:
             print(f"\n{Colors.BOLD}{Colors.GREEN}🎉 SUCCESS! Your MOBI e-books have been compiled directly in:{Colors.END}")
             if en_bn_success and os.path.exists(en_bn_mobi):
                 print(f"   • English-to-Bangla : {Colors.CYAN}{en_bn_mobi}{Colors.END}")
             if bn_en_success and os.path.exists(bn_en_mobi):
                 print(f"   • Bangla-to-English : {Colors.CYAN}{bn_en_mobi}{Colors.END}")
+            if bn_bn_success and os.path.exists(bn_bn_mobi):
+                print(f"   • Bangla-to-Bangla  : {Colors.CYAN}{bn_bn_mobi}{Colors.END}")
             print()
         else:
             print(f"\n{Colors.BOLD}{Colors.GREEN}👉 To build MOBI e-books, compile using Kindle Previewer or run:{Colors.END}")
             print(f"   kindlegen ./build/en-bn/dict.opf -o {en_bn_filename}")
-            print(f"   kindlegen ./build/bn-en/dict.opf -o {bn_en_filename}\n")
+            print(f"   kindlegen ./build/bn-en/dict.opf -o {bn_en_filename}")
+            print(f"   kindlegen ./build/bn-bn/dict.opf -o {bn_bn_filename}\n")
 
 if __name__ == '__main__':
     try:

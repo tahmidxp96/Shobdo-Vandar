@@ -1,6 +1,6 @@
 # Shobdo vandar (শব্দ ভান্ডার) 📚🇧🇩
 
-A developer-centric reference project and high-performance compilation pipeline showing how to build custom, search-compliant Kindle bilingual dictionaries from raw lexicographical datasets.
+A developer-centric reference project and high-performance compilation pipeline showing how to build custom, search-compliant Kindle bilingual and monolingual dictionaries from raw lexicographical datasets.
 
 [![GitHub Release](https://img.shields.io/github/v/release/tahmidxp96/Shobdo-Vandar?logo=github&style=for-the-badge&color=3383FF)](https://github.com/tahmidxp96/Shobdo-Vandar/releases)
 [![Total Downloads](https://img.shields.io/github/downloads/tahmidxp96/Shobdo-Vandar/total?logo=github&style=for-the-badge&color=2EA043)](https://github.com/tahmidxp96/Shobdo-Vandar/releases)
@@ -27,45 +27,51 @@ By analyzing this codebase, you can easily adapt the pipeline to compile high-fi
 This diagram illustrates how raw source lexicons are ingested, consolidated, formatted into Kindle-compliant markups, and compiled into optimized dictionary files:
 
 ```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                        DATA PIPELINE ARCHITECTURE                      │
-└────────────────────────────────────────────────────────────────────────┘
+ ┌────────────────────────────────────────────────────────────────────────┐
+ │                        DATA PIPELINE ARCHITECTURE                      │
+ └────────────────────────────────────────────────────────────────────────┘
 
- [ Raw Lexicons ]        [ Normalization & DB ]         [ Document Generation ]
- ┌──────────────┐        ┌────────────────────┐         ┌─────────────────────┐
- │ MinhasKamal  │───┐    │                    │         │  XHTML Sharding     │
- └──────────────┘   │    │                    │         │  (Max 1000 entries) │
- ┌──────────────┐   │    │                    │         │  ┌────────────────┐ │
- │  Aparajeyo   │───┼───>│ kindle_dictionary_ │────────>│  │ content_N.html │ │
- └──────────────┘   │    │     builder.py     │         │  └────────────────┘ │
- ┌──────────────┐   │    │                    │         │  - xmlns:idx markup │
- │    Ridmik    │───┤    │                    │         │  - <idx:entry> tags │
- └──────────────┘   │    │  - SQLite Staging  │         └──────────┬──────────┘
- ┌──────────────┐   │    │    (lexicon.db)    │                    │
- │    Ankur     │───┤    │  - Deduplication   │                    ▼
- └──────────────┘   │    │  - Normalization   │         ┌─────────────────────┐
- ┌──────────────┐   │    └────────────────────┘         │ OPF Meta / Nav XML  │
- │  Wiktionary  │───┤                                   │ - dict.opf          │
- └──────────────┘   │                                   │ - <x-metadata> tags │
- ┌──────────────┐   │                                   │ - nav.html          │
- │   Hunspell   │───┘                                   └──────────┬──────────┘
- └──────────────┘
-                                                                   │
-                                                                   ▼
- [ Compiler Invocation ]                                [ Distribution ]
- ┌────────────────────────────────────────────────┐     ┌─────────────────────┐
- │           Kindle Previewer 3 Toolchain         │     │  Direct Sideload    │
- │  ┌──────────────────────────────────────────┐  │     │  (USB to device)    │
- │  │      Embedded kindlegen Compiler         │  │     └──────────▲──────────┘
- │  └────────────────────┬─────────────────────┘  │                │
- │                       │                        ├────────────────┘
- │                       ▼                        │
- │  ┌──────────────────────────────────────────┐  │     ┌─────────────────────┐
- │  │        High-Fidelity .MOBI Output        │──┼────>│   GitHub Releases   │
- │  │  - en-bn.mobi (~94.4k entries, 10.4 MB)  │  │     │   (Automated CI)    │
- │  │  - bn-en.mobi (~50.9k entries,  6.4 MB)  │  │     └─────────────────────┘
- │  └──────────────────────────────────────────┘  │
- └────────────────────────────────────────────────┘
+  [ Raw Lexicons ]        [ Normalization & DB ]         [ Document Generation ]
+  ┌──────────────┐        ┌────────────────────┐         ┌─────────────────────┐
+  │ MinhasKamal  │───┐    │                    │         │  XHTML Sharding     │
+  └──────────────┘   │    │                    │         │  (Max 1000 entries) │
+  ┌──────────────┐   │    │                    │         │  ┌────────────────┐ │
+  │  Aparajeyo   │───┼───>│ kindle_dictionary_ │────────>│  │ content_N.html │ │
+  └──────────────┘   │    │     builder.py     │         │  └────────────────┘ │
+  ┌──────────────┐   │    │                    │         │  - xmlns:idx markup │
+  │    Ridmik    │───┤    │                    │         │  - <idx:entry> tags │
+  └──────────────┘   │    │  - SQLite Staging  │         └──────────┬──────────┘
+  ┌──────────────┐   │    │    (lexicon.db)    │                    │
+  │    Ankur     │───┤    │  - Deduplication   │                    ▼
+  └──────────────┘   │    │  - Normalization   │         ┌─────────────────────┐
+  ┌──────────────┐   │    └────────────────────┘         │ OPF Meta / Nav XML  │
+  │  Wiktionary  │───┤                                   │ - dict.opf          │
+  └──────────────┘   │                                   │ - <x-metadata> tags │
+  ┌──────────────┐   │                                   │ - nav.html          │
+  │   Hunspell   │───┤                                   └──────────┬──────────┘
+  └──────────────┘   │                                              │
+  ┌──────────────┐   │                                              ▼
+  │   BoiBhai    │───┘                                   ┌─────────────────────┐
+  └──────────────┘                                       │  Tri-Directional    │
+                                                         │  Kindle MOBI Books  │
+                                                         └──────────┬──────────┘
+                                                                    │
+                                                                    ▼
+  [ Compiler Invocation ]                                [ Distribution ]
+  ┌────────────────────────────────────────────────┐     ┌─────────────────────┐
+  │           Kindle Previewer 3 Toolchain         │     │  Direct Sideload    │
+  │  ┌──────────────────────────────────────────┐  │     │  (USB to device)    │
+  │  │      Embedded kindlegen Compiler         │  │     └──────────▲──────────┘
+  │  └────────────────────┬─────────────────────┘  │                │
+  │                       │                        ├────────────────┘
+  │                       ▼                        │
+  │  ┌──────────────────────────────────────────┐  │     ┌─────────────────────┐
+  │  │        High-Fidelity .MOBI Outputs       │──┼────>│   GitHub Releases   │
+  │  │  - Shobdo_Vandar_en-bn_v1.4.0.mobi       │  │     │   (Automated CI)    │
+  │  │  - Shobdo_Vandar_bn-en_v1.4.0.mobi       │  │     └─────────────────────┘
+  │  │  - Shobdo_Vandar_bn-bn_v1.4.0.mobi       │  │
+  │  └──────────────────────────────────────────┘  │
+  └────────────────────────────────────────────────┘
 ```
 
 ---
@@ -88,8 +94,9 @@ You do not need to build these files manually. The compilation pipeline runs aut
 
 1. Navigate to the **[Releases](https://github.com/tahmidxp96/Shobdo-Vandar/releases)** page.
 2. Download the dictionary binary you need from the assets section:
-   * **`en-bn.mobi`** (English-to-Bangla: **94,347 entries**, ~10.4 MB)
-   * **`bn-en.mobi`** (Bangla-to-English: **50,919 entries**, ~6.4 MB)
+   * **`Shobdo_Vandar_en-bn_v1.4.0.mobi`** (English-to-Bangla: **94,348 entries**, ~10.4 MB)
+   * **`Shobdo_Vandar_bn-en_v1.4.0.mobi`** (Bangla-to-English: **50,928 entries**, ~6.4 MB)
+   * **`Shobdo_Vandar_bn-bn_v1.4.0.mobi`** (Bangla-to-Bangla: **11 entries**, ~0.1 MB)
 
 ---
 
@@ -104,14 +111,15 @@ To load the compiled dictionaries onto any physical Kindle (including Kindle Pap
    Kindle/
    └── documents/
        └── dictionaries/
-           ├── en-bn.mobi
-           └── bn-en.mobi
+           ├── Shobdo_Vandar_en-bn_v1.4.0.mobi
+           ├── Shobdo_Vandar_bn-en_v1.4.0.mobi
+           └── Shobdo_Vandar_bn-bn_v1.4.0.mobi
    ```
 4. **Safely eject** the Kindle from your computer.
 5. **Activate the Dictionaries:**
    * On your device, go to **Settings ➔ Language & Dictionaries ➔ Dictionaries**.
-   * Under the **English** language category, select **High-Quality English-to-Bangla Kindle Dictionary**.
-   * Under the **Bangla** language category, select **Advanced Bangla-to-English Learner's Dictionary**.
+   * Under the **English** language category, select **Shobdo Vandar English-to-Bangla Dictionary**.
+   * Under the **Bangla** language category, select **Shobdo Vandar Bangla-to-English Dictionary** and **Shobdo Vandar Bangla-to-Bangla Dictionary**.
 6. Highlight any English or Bangla word inside an e-book to view instant, context-rich definitions.
 
 ---
@@ -134,7 +142,7 @@ If you want to modify source definitions, add custom glossaries, or run the comp
    cd Shobdo-Vandar
    ```
 
-2. **Run the Complete Build Suite** (performs database staging, consolidation, and full MOBI generation):
+2. **Run the Complete Build Suite** (performs database staging, consolidation, and full MOBI generation for all 3 directions):
    ```bash
    python3 kindle_dictionary_builder.py
    ```
@@ -148,13 +156,15 @@ If you want to modify source definitions, add custom glossaries, or run the comp
    You can verify how an entry is displayed on Kindle popups and full-page layouts using the terminal lookup previewer:
    ```bash
    python3 kindle_dictionary_builder.py -p "benevolent"
+   # Or monolingual lookup
+   python3 kindle_dictionary_builder.py -p "হিতৈষী"
    ```
 
 ---
 
 ## 📊 Lexicon Architecture & Coverage
 
-The builder compiles custom bilingual dictionaries by normalising data across multiple staging references:
+The builder compiles custom dictionaries by normalising data across multiple staging references:
 
 | Source | Records Processed | Translation Pathway | Primary Lexical Characteristics | Link | License |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -164,11 +174,13 @@ The builder compiles custom bilingual dictionaries by normalising data across mu
 | **Ankur** | 1,984 | English ➔ Bangla | Traditional terminology vocabulary | [Ankur Project](http://www.ankur.org.bd/) | GPL License |
 | **Wiktionary** | 24 | English ➔ Bangla | Collaborative contextual examples & POS tags | [Wiktionary](https://www.wiktionary.org/) | CC-BY-SA 3.0 |
 | **Hunspell** | 30 | Bangla ➔ English | Orthographical verified spelling lemmas | [Hunspell BN](https://github.com/tushar-rishav/hunspell-bn) | LGPL / GPL |
+| **BoiBhai** | 11 | Bangla ➔ Bangla | Crowdsourced native monolingual glossary | [BoiBhai bn-dict](https://github.com/BoiBhai/bn-dict-database) | Open Source |
 
 ### Consolidated Output Statistics:
-* **Bangla-to-English (`bn-en`)**: `50,928` unique entries
 * **English-to-Bangla (`en-bn`)**: `94,348` unique entries
-* **Total Combined Database**: **`145,276`** deduplicated, high-fidelity words
+* **Bangla-to-English (`bn-en`)**: `50,928` unique entries
+* **Bangla-to-Bangla (`bn-bn`)**: `11` unique entries
+* **Total Combined Database**: **`145,287`** deduplicated, high-fidelity words
 
 ---
 
@@ -176,10 +188,10 @@ The builder compiles custom bilingual dictionaries by normalising data across mu
 
 This repository utilizes GitHub Actions (`.github/workflows/release.yml`) for continuous deployment. 
 
-Whenever a release version tag (e.g., `v1.2.0`) is pushed to the repository:
+Whenever a release version tag (e.g., `v1.4.0`) is pushed to the repository:
 1. A fresh macOS environment is provisioned on GitHub runners.
 2. The latest **Kindle Previewer 3** package is dynamically fetched and installed.
-3. The `kindle_dictionary_builder.py` script initializes the ingestion pipeline, performs standardizations, and runs the MOBI compilation.
+3. The `kindle_dictionary_builder.py` script initializes the ingestion pipeline, performs standardizations, and runs the MOBI compilation for all three targets.
 4. The workflow bundles the completed `.mobi` binaries and publishes them directly to your repository's Releases page.
 
 ---
@@ -194,3 +206,4 @@ The builder and compilation pipeline scripts are distributed under the **MIT Lic
 * **Ankur Dictionary:** English-to-Bangla translation terminology database compiled by the open-source [Ankur Bangla Project](http://www.ankur.org.bd/) (distributed under the GPL License).
 * **Wiktionary Bilingual Dataset:** Collaborative community-driven definitions and bilingual translations from [Wiktionary](https://www.wiktionary.org/) (distributed under the CC-BY-SA 3.0 License).
 * **Hunspell Spelling Dictionary:** Standardized Bengali spell-checker lemmas and orthographical reference definitions from [Hunspell](https://hunspell.github.io/) / [hunspell-bn](https://github.com/tushar-rishav/hunspell-bn) (distributed under the LGPL/GPL License).
+* **BoiBhai Monolingual Dictionary:** Crowdsourced and collaborative Bengali-to-Bengali monolingual dictionary containing pronunciation, etymology, ontology, and native definition data from [BoiBhai bn-dict-database](https://github.com/BoiBhai/bn-dict-database).
