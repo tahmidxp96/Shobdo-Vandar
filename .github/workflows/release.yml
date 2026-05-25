@@ -22,19 +22,31 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - name: Cache Kindle Previewer
+        id: cache-kindle
+        uses: actions/cache@v4
+        with:
+          path: /Applications/Kindle Previewer 3.app
+          key: ${{ runner.os }}-kindle-previewer-v3
 
       - name: Download Kindle Previewer macOS Installer
+        if: steps.cache-kindle.outputs.cache-hit != 'true'
         run: |
           echo "Downloading official Amazon Kindle Previewer 3 macOS installer..."
           curl -L "https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg" -o KindlePreviewerInstaller.pkg
 
       - name: Install Kindle Previewer and Verify compiler
         run: |
-          echo "Executing silent macOS installer..."
-          sudo installer -pkg KindlePreviewerInstaller.pkg -target /
+          # If cache hit, verify compiler path directly. If cache miss, run installer first.
+          KP_PATH="/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen"
+          if [ "${{ steps.cache-kindle.outputs.cache-hit }}" != "true" ]; then
+            echo "Executing silent macOS installer..."
+            sudo installer -pkg KindlePreviewerInstaller.pkg -target /
+          else
+            echo "Kindle Previewer successfully restored from cache."
+          fi
           
           # Verify detection path for embedded kindlegen
-          KP_PATH="/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen"
           if [ -f "$KP_PATH" ]; then
             echo "SUCCESS: Kindle Previewer compiler found at: $KP_PATH"
           else
