@@ -128,7 +128,7 @@ To load the compiled dictionaries onto any physical Kindle (including Kindle Pap
 
 This project was natively designed and developed on **macOS (Apple Silicon/Intel)**, leveraging Amazon's official macOS Kindle Previewer 3 installation to compile high-fidelity `.mobi` dictionaries. 
 
-However, because the dictionary-building script is written in standard cross-platform Python, **Windows** and **Linux** users can easily run the compilation suite locally with an extremely high probability of success!
+However, because the dictionary-building script is written in standard cross-platform Python, **Windows** and **Linux** users can easily run the compilation suite locally by following standard setup instructions.
 
 ### Prerequisites
 
@@ -146,7 +146,6 @@ Below are the step-by-step instructions for setting up the toolchain on your pre
 * **Setup Step**: Install the official Kindle Previewer 3.
   * [Download official macOS PKG installer](https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg).
 * **Compiler Resolution**: The python builder script automatically resolves standard macOS installation folders (e.g. `/Applications/Kindle Previewer 3.app`) to locate the embedded `kindlegen` executable.
-* **Success Probability**: **100% (Guaranteed)**.
 
 #### 🪟 Windows (Highly Compatible)
 * **Setup Step**: Install the official Kindle Previewer 3 for Windows.
@@ -155,7 +154,7 @@ Below are the step-by-step instructions for setting up the toolchain on your pre
   1. Once installed, copy the compiler `kindlegen.exe` from your local application data path:
      `C:\Users\<Your_Username>\AppData\Local\Amazon\Kindle Previewer 3\lib\fc\bin\kindlegen.exe`
   2. Paste it directly into the **root folder of this repository** as `kindlegen.exe`. The script will automatically detect and use it.
-* **Success Probability**: **99% (Excellent)**. Once Python 3 and the `kindlegen.exe` binary are in the root directory, the workflow is identical to macOS.
+  3. Once Python 3 and the `kindlegen.exe` binary are in the root directory, the workflow is identical to macOS.
 
 #### 🐧 Linux (Alternative Configuration)
 * **Setup Step**: Amazon does not distribute Kindle Previewer 3 for Linux, but you can utilize the final official standalone **KindleGen v2.9 for Linux** release.
@@ -167,7 +166,7 @@ Below are the step-by-step instructions for setting up the toolchain on your pre
      sudo apt-get update
      sudo apt-get install libc6-i386
      ```
-* **Success Probability**: **95% (Very Good)**. Execution succeeds perfectly once the 32-bit compatibility package is installed on the host.
+  5. Execution succeeds perfectly once the 32-bit compatibility package is installed on the host.
 
 ---
 
