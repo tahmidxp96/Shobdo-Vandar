@@ -46,16 +46,16 @@ This diagram illustrates how raw source lexicons are ingested, consolidated, for
   └──────────────┘   │    │  - Normalization   │         ┌─────────────────────┐
   ┌──────────────┐   │    └────────────────────┘         │ OPF Meta / Nav XML  │
   │  Wiktionary  │───┤                                   │ - dict.opf          │
-  └──────────────┘   │                                   │ - <x-metadata> tags │
-  ┌──────────────┐   │                                   │ - nav.html          │
-  │   Hunspell   │───┤                                   └──────────┬──────────┘
-  └──────────────┘   │                                              │
-  ┌──────────────┐   │                                              ▼
-  │   BoiBhai    │───┘                                   ┌─────────────────────┐
-  └──────────────┘                                       │  Tri-Directional    │
-                                                         │  Kindle MOBI Books  │
-                                                         └──────────┬──────────┘
-                                                                    │
+  └──────────────┘   │                                   │ - nav.html          │
+  ┌──────────────┐   │                                   └──────────┬──────────┘
+  │   Hunspell   │───┤                                              │
+  └──────────────┘   │                                              ▼
+  ┌──────────────┐   │                                   ┌─────────────────────┐
+  │   BoiBhai    │───┤                                   │  Tri-Directional    │
+  └──────────────┘   │                                   │  Kindle MOBI Books  │
+  ┌──────────────┐   │                                   └──────────┬──────────┘
+  │MuntashirAkon │───┘                                              │
+  └──────────────┘                                                  │
                                                                     ▼
   [ Compiler Invocation ]                                [ Distribution ]
   ┌────────────────────────────────────────────────┐     ┌─────────────────────┐
@@ -67,9 +67,9 @@ This diagram illustrates how raw source lexicons are ingested, consolidated, for
   │                       ▼                        │
   │  ┌──────────────────────────────────────────┐  │     ┌─────────────────────┐
   │  │        High-Fidelity .MOBI Outputs       │──┼────>│   GitHub Releases   │
-  │  │  - Shobdo_Vandar_en-bn_v1.4.0.mobi       │  │     │   (Automated CI)    │
-  │  │  - Shobdo_Vandar_bn-en_v1.4.0.mobi       │  │     └─────────────────────┘
-  │  │  - Shobdo_Vandar_bn-bn_v1.4.0.mobi       │  │
+  │  │  - Shobdo_Vandar_en-bn_v1.5.0.mobi       │  │     │   (Automated CI)    │
+  │  │  - Shobdo_Vandar_bn-en_v1.5.0.mobi       │  │     └─────────────────────┘
+  │  │  - Shobdo_Vandar_bn-bn_v1.5.0.mobi       │  │
   │  └──────────────────────────────────────────┘  │
   └────────────────────────────────────────────────┘
 ```
@@ -94,9 +94,9 @@ You do not need to build these files manually. The compilation pipeline runs aut
 
 1. Navigate to the **[Releases](https://github.com/tahmidxp96/Shobdo-Vandar/releases)** page.
 2. Download the dictionary binary you need from the assets section:
-   * **`Shobdo_Vandar_en-bn_v1.4.0.mobi`** (English-to-Bangla: **94,348 entries**, ~10.4 MB)
-   * **`Shobdo_Vandar_bn-en_v1.4.0.mobi`** (Bangla-to-English: **50,928 entries**, ~6.4 MB)
-   * **`Shobdo_Vandar_bn-bn_v1.4.0.mobi`** (Bangla-to-Bangla: **11 entries**, ~0.1 MB)
+   * **`Shobdo_Vandar_en-bn_v1.5.0.mobi`** (English-to-Bangla: **94,348 entries**, ~10.4 MB)
+   * **`Shobdo_Vandar_bn-en_v1.5.0.mobi`** (Bangla-to-English: **50,928 entries**, ~6.4 MB)
+   * **`Shobdo_Vandar_bn-bn_v1.5.0.mobi`** (Bangla-to-Bangla: **46,552 entries**, ~9.2 MB)
 
 ---
 
@@ -111,9 +111,9 @@ To load the compiled dictionaries onto any physical Kindle (including Kindle Pap
    Kindle/
    └── documents/
        └── dictionaries/
-           ├── Shobdo_Vandar_en-bn_v1.4.0.mobi
-           ├── Shobdo_Vandar_bn-en_v1.4.0.mobi
-           └── Shobdo_Vandar_bn-bn_v1.4.0.mobi
+            ├── Shobdo_Vandar_en-bn_v1.5.0.mobi
+            ├── Shobdo_Vandar_bn-en_v1.5.0.mobi
+            └── Shobdo_Vandar_bn-bn_v1.5.0.mobi
    ```
 4. **Safely eject** the Kindle from your computer.
 5. **Activate the Dictionaries:**
@@ -175,12 +175,13 @@ The builder compiles custom dictionaries by normalising data across multiple sta
 | **Wiktionary** | 24 | English ➔ Bangla | Collaborative contextual examples & POS tags | [Wiktionary](https://www.wiktionary.org/) | CC-BY-SA 3.0 |
 | **Hunspell** | 30 | Bangla ➔ English | Orthographical verified spelling lemmas | [Hunspell BN](https://github.com/tushar-rishav/hunspell-bn) | LGPL / GPL |
 | **BoiBhai** | 11 | Bangla ➔ Bangla | Crowdsourced native monolingual glossary | [BoiBhai bn-dict](https://github.com/BoiBhai/bn-dict-database) | Open Source |
+| **MuntashirAkon** | 46,551 | Bangla ➔ Bangla | Comprehensive HTML definitions, POS, and Sanskrit etymology | [MuntashirAkon/BanglaDictionary](https://github.com/MuntashirAkon/BanglaDictionary) | GPL License |
 
 ### Consolidated Output Statistics:
 * **English-to-Bangla (`en-bn`)**: `94,348` unique entries
 * **Bangla-to-English (`bn-en`)**: `50,928` unique entries
-* **Bangla-to-Bangla (`bn-bn`)**: `11` unique entries
-* **Total Combined Database**: **`145,287`** deduplicated, high-fidelity words
+* **Bangla-to-Bangla (`bn-bn`)**: `46,552` unique entries
+* **Total Combined Database**: **`191,828`** deduplicated, high-fidelity words
 
 ---
 
@@ -188,7 +189,7 @@ The builder compiles custom dictionaries by normalising data across multiple sta
 
 This repository utilizes GitHub Actions (`.github/workflows/release.yml`) for continuous deployment. 
 
-Whenever a release version tag (e.g., `v1.4.0`) is pushed to the repository:
+Whenever a release version tag (e.g., `v1.5.0`) is pushed to the repository:
 1. A fresh macOS environment is provisioned on GitHub runners.
 2. The latest **Kindle Previewer 3** package is dynamically fetched and installed.
 3. The `kindle_dictionary_builder.py` script initializes the ingestion pipeline, performs standardizations, and runs the MOBI compilation for all three targets.
@@ -207,3 +208,4 @@ The builder and compilation pipeline scripts are distributed under the **MIT Lic
 * **Wiktionary Bilingual Dataset:** Collaborative community-driven definitions and bilingual translations from [Wiktionary](https://www.wiktionary.org/) (distributed under the CC-BY-SA 3.0 License).
 * **Hunspell Spelling Dictionary:** Standardized Bengali spell-checker lemmas and orthographical reference definitions from [Hunspell](https://hunspell.github.io/) / [hunspell-bn](https://github.com/tushar-rishav/hunspell-bn) (distributed under the LGPL/GPL License).
 * **BoiBhai Monolingual Dictionary:** Crowdsourced and collaborative Bengali-to-Bengali monolingual dictionary containing pronunciation, etymology, ontology, and native definition data from [BoiBhai bn-dict-database](https://github.com/BoiBhai/bn-dict-database).
+* **MuntashirAkon Monolingual Dictionary:** Extensive Bangla-to-Bangla monolingual definitions and grammatical etymologies from [MuntashirAkon/BanglaDictionary](https://github.com/MuntashirAkon/BanglaDictionary) (distributed under the GNU GPL License).

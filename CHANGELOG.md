@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-05-25
+
+### Added
+- Added MuntashirAkon large-scale monolingual Bangla-to-Bangla (bn-bn) dictionary target
+
+### Changed
+- Ingested 46,558 rich definitions from MuntashirAkon SQLite database
+- Sanitized and formatted XHTML definitions for strict Kindle compliance
+- Optimized dual bilingual and monolingual CLI preview lookups with tag-stripping
+
+---
+
 ## [1.4.0] - 2026-05-25
 
 ### Added

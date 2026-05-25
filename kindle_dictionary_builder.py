@@ -474,8 +474,48 @@ def populate_staging(db_name=DB_NAME):
     else:
         log_warning("BoiBhai JSON not found at 'BoiBhai/boibhai_dictionary.json'!")
 
+    # 8. Ingest MuntashirAkon BanglaDictionary SQLite DB
+    muntashir_db = os.path.join('MuntashirAkon', 'BanglaDictionary.db')
+    muntashir_records = []
+    if os.path.exists(muntashir_db):
+        log_info("Reading MuntashirAkon BanglaDictionary SQLite DB...")
+        try:
+            m_conn = sqlite3.connect(muntashir_db)
+            m_cursor = m_conn.cursor()
+            m_cursor.execute("SELECT word_name, definition FROM words")
+            rows = m_cursor.fetchall()
+            m_conn.close()
+            
+            for word_name, definition in rows:
+                if not word_name or not definition:
+                    continue
+                # Split multiple headwords if they are separated by pipes
+                words = [w.strip() for w in word_name.split('|') if w.strip()]
+                
+                # XHTML and ampersand cleansing
+                # Standardize <br> to <br />
+                cleaned_def = re.sub(r'<br\s*([^>]*)>', r'<br />', definition)
+                # Standardize & not followed by an entity to &amp;
+                cleaned_def = re.sub(r'&(?!#[0-9]+;)(?![a-zA-Z0-9]+;)', r'&amp;', cleaned_def)
+                
+                for w in words:
+                    muntashir_records.append((
+                        'MuntashirAkon',
+                        'GNU GPL',
+                        w,
+                        'bn-bn',
+                        None,  # POS is embedded inside the HTML definition block
+                        cleaned_def,
+                        None
+                    ))
+        except Exception as e:
+            log_error(f"Failed to parse MuntashirAkon DB: {e}")
+        log_info(f"Parsed {len(muntashir_records):,} records from MuntashirAkon DB.")
+    else:
+        log_warning("MuntashirAkon DB not found at 'MuntashirAkon/BanglaDictionary.db'!")
+
     # Perform bulk inserts in transaction for high performance
-    all_records = minhas_records + ridmik_records + aparajeyo_records + ankur_records + wiktionary_records + hunspell_records + boibhai_records
+    all_records = minhas_records + ridmik_records + aparajeyo_records + ankur_records + wiktionary_records + hunspell_records + boibhai_records + muntashir_records
     if all_records:
         log_info(f"Inserting {len(all_records):,} raw records into source_ingestion table...")
         cursor.executemany("""
@@ -554,11 +594,12 @@ def build_master_lexicon(db_name=DB_NAME):
         'CuratedContexts': 1,
         'Wiktionary': 2,
         'BoiBhai': 3,
-        'Ridmik': 4,
-        'MinhasKamal': 5,
-        'Aparajeyo': 6,
-        'Ankur': 7,
-        'Hunspell': 8
+        'MuntashirAkon': 4,
+        'Ridmik': 5,
+        'MinhasKamal': 6,
+        'Aparajeyo': 7,
+        'Ankur': 8,
+        'Hunspell': 9
     }
     
     for raw_hw, direction, ingestion_ids_str in groups:
@@ -630,8 +671,12 @@ def build_master_lexicon(db_name=DB_NAME):
             else:
                 sense_raw_clean = sense_raw
             
-            # Clean senses and split by comma or semi-colon
-            cleaned_meanings = [m.strip() for m in re.split(r'[,;।]', sense_raw_clean) if m.strip()]
+            if source == 'MuntashirAkon':
+                # Treat raw HTML block as a single unified meaning
+                cleaned_meanings = [sense_raw_clean]
+            else:
+                # Clean senses and split by comma or semi-colon
+                cleaned_meanings = [m.strip() for m in re.split(r'[,;।]', sense_raw_clean) if m.strip()]
             
             # Gather all meanings accumulated in senses so far (curated + other raw sources)
             flat_accumulated_meanings = []
@@ -791,19 +836,23 @@ class KindleDictionaryCompiler:
         senses_html = ""
         if len(senses) == 1:
             s = senses[0]
-            meanings = ", ".join(s['meanings'])
-            context_html = f' <span class="context">[{xml_escape(s["context"])}]</span>' if s.get('context') else ""
-            pos_label = s.get('pos', '')
-            pos_html = ""
-            if pos_label and pos_label.lower() not in ["unk", "unknown", "none", "null"]:
-                pos_html = f'<span class="pos">({xml_escape(pos_label)})</span> '
-            senses_html = f'<p>{pos_html}{context_html}<b>{xml_escape(meanings)}</b></p>'
-            if s.get('example_en'):
-                senses_html += f'<p class="example-en">💬 {xml_escape(s["example_en"])}</p>'
-                if s.get('example_bn'):
-                    senses_html += f'<p class="example-bn">➔ {xml_escape(s["example_bn"])}</p>'
-            elif s.get('example'):
-                senses_html += f'<p class="example">💬 {xml_escape(s["example"])}</p>'
+            if s.get('source') == 'MuntashirAkon':
+                # MuntashirAkon contains pre-cleansed XML/XHTML definitions
+                senses_html = s['meanings'][0]
+            else:
+                meanings = ", ".join(s['meanings'])
+                context_html = f' <span class="context">[{xml_escape(s["context"])}]</span>' if s.get('context') else ""
+                pos_label = s.get('pos', '')
+                pos_html = ""
+                if pos_label and pos_label.lower() not in ["unk", "unknown", "none", "null"]:
+                    pos_html = f'<span class="pos">({xml_escape(pos_label)})</span> '
+                senses_html = f'<p>{pos_html}{context_html}<b>{xml_escape(meanings)}</b></p>'
+                if s.get('example_en'):
+                    senses_html += f'<p class="example-en">💬 {xml_escape(s["example_en"])}</p>'
+                    if s.get('example_bn'):
+                        senses_html += f'<p class="example-bn">➔ {xml_escape(s["example_bn"])}</p>'
+                elif s.get('example'):
+                    senses_html += f'<p class="example">💬 {xml_escape(s["example"])}</p>'
         else:
             senses_html = '<ol>'
             for s in senses:
@@ -1041,43 +1090,81 @@ def preview_entry(lemma, db_name=DB_NAME):
                 break
                 
         primary_sense = senses[0] if senses else {}
-        primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
-        secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
-        context_tag = f" ({Colors.YELLOW}{primary_sense.get('context')}{Colors.END})" if primary_sense.get('context') else ""
-        
         dir_title = "Bangla-to-Bangla (bn-bn)" if direction == 'bn-bn' else ("Bangla-to-English (bn-en)" if direction == 'bn-en' else "English-to-Bangla (en-bn)")
         
-        # 1. RENDER POPUP BUBBLE
-        print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
-        print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
-        print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
-        if inflections:
-            print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
-        print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
-        print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
-        
-        # 2. RENDER FULL PAGE VIEW
-        print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
-        print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
-        print(f"│  Attributed Sources: {sources}")
-        print("│")
-        print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
-        for idx, sense in enumerate(senses):
-            meanings = ", ".join(sense['meanings'])
-            context_str = f" ({Colors.YELLOW}{sense['context']}{Colors.END})" if sense.get('context') else ""
-            print(f"│    {idx+1}. [{Colors.CYAN}{sense['pos']}{Colors.END}]{context_str} {Colors.BOLD}{meanings}{Colors.END}")
-            if sense.get('example_en'):
-                print(f"│       {Colors.GREEN}💬 En: {sense['example_en']}{Colors.END}")
-                if sense.get('example_bn'):
-                    print(f"│       {Colors.GREEN}   Bn: {sense['example_bn']}{Colors.END}")
-            elif sense.get('example'):
-                print(f"│       {Colors.GREEN}💬 Example: {sense['example']}{Colors.END}")
-                
-        if inflections:
+        if primary_sense.get('source') == 'MuntashirAkon':
+            import html as py_html
+            raw_html = primary_sense['meanings'][0]
+            clean_lines = []
+            text = py_html.unescape(raw_html)
+            text = re.sub(r'</?p>|<br\s*/?>', '\n', text)
+            text = re.sub(r'<[^>]+>', '', text)
+            for line in text.split('\n'):
+                l = line.strip()
+                if l:
+                    clean_lines.append(l)
+            
+            # 1. RENDER POPUP BUBBLE
+            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
+            print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+            for idx, line in enumerate(clean_lines[:4]):
+                print(f"│  {Colors.BOLD if idx == 0 else Colors.END}{Colors.GREEN if idx == 0 else ''}{line}{Colors.END}")
+            if len(clean_lines) > 4:
+                print(f"│  ...")
+            if inflections:
+                print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
+            print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
+            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
+            
+            # 2. RENDER FULL PAGE VIEW
+            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
+            print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+            print(f"│  Attributed Sources: {sources}")
             print("│")
-            print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
-            print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
-        print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+            print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
+            for line in clean_lines:
+                print(f"│    {line}")
+            if inflections:
+                print("│")
+                print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
+                print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
+            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+        else:
+            primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
+            secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
+            context_tag = f" ({Colors.YELLOW}{primary_sense.get('context')}{Colors.END})" if primary_sense.get('context') else ""
+            
+            # 1. RENDER POPUP BUBBLE
+            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
+            print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
+            print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
+            if inflections:
+                print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
+            print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
+            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
+            
+            # 2. RENDER FULL PAGE VIEW
+            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
+            print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+            print(f"│  Attributed Sources: {sources}")
+            print("│")
+            print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
+            for idx, sense in enumerate(senses):
+                meanings = ", ".join(sense['meanings'])
+                context_str = f" ({Colors.YELLOW}{sense['context']}{Colors.END})" if sense.get('context') else ""
+                print(f"│    {idx+1}. [{Colors.CYAN}{sense['pos']}{Colors.END}]{context_str} {Colors.BOLD}{meanings}{Colors.END}")
+                if sense.get('example_en'):
+                    print(f"│       {Colors.GREEN}💬 En: {sense['example_en']}{Colors.END}")
+                    if sense.get('example_bn'):
+                        print(f"│       {Colors.GREEN}   Bn: {sense['example_bn']}{Colors.END}")
+                elif sense.get('example'):
+                    print(f"│       {Colors.GREEN}💬 Example: {sense['example']}{Colors.END}")
+                    
+            if inflections:
+                print("│")
+                print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
+                print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
+            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
         
     conn.close()
     if not found_any:
