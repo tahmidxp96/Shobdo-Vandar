@@ -15,6 +15,8 @@ import json
 import time
 import sqlite3
 import argparse
+import logging
+import unicodedata
 from xml.sax.saxutils import escape as xml_escape
 
 DB_NAME = 'lexicon.db'
@@ -32,20 +34,66 @@ class Colors:
     UNDERLINE = '\033[4m'
     END = '\033[0m'
 
+# Logger setup
+logger = logging.getLogger("ShobdoVandar")
+logger.setLevel(logging.INFO)
+
+class AnsiStrippingFormatter(logging.Formatter):
+    ANSI_ESCAPE = re.compile(r'\x1b\[[0-9;]*m')
+    def format(self, record):
+        orig_msg = record.msg
+        if isinstance(record.msg, str):
+            record.msg = self.ANSI_ESCAPE.sub('', record.msg)
+        formatted = super().format(record)
+        record.msg = orig_msg
+        return formatted
+
+if not logger.handlers:
+    # Console handler
+    c_handler = logging.StreamHandler(sys.stdout)
+    c_format = logging.Formatter('%(message)s')
+    c_handler.setFormatter(c_format)
+    logger.addHandler(c_handler)
+    
+    # File handler
+    f_handler = logging.FileHandler('build.log', mode='w', encoding='utf-8')
+    f_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    f_handler.setFormatter(AnsiStrippingFormatter(f_format._fmt))
+    logger.addHandler(f_handler)
+
 def log_info(msg):
-    print(f"{Colors.BLUE}[INFO]{Colors.END} {msg}")
+    logger.info(f"{Colors.BLUE}[INFO]{Colors.END} {msg}")
 
 def log_success(msg):
-    print(f"{Colors.GREEN}[SUCCESS]{Colors.END} {msg}")
+    logger.info(f"{Colors.GREEN}[SUCCESS]{Colors.END} {msg}")
 
 def log_warning(msg):
-    print(f"{Colors.YELLOW}[WARNING]{Colors.END} {msg}")
+    logger.warning(f"{Colors.YELLOW}[WARNING]{Colors.END} {msg}")
 
 def log_error(msg):
-    print(f"{Colors.RED}[ERROR]{Colors.END} {msg}", file=sys.stderr)
+    logger.error(f"{Colors.RED}[ERROR]{Colors.END} {msg}")
 
 def log_step(step_num, title):
-    print(f"\n{Colors.BOLD}{Colors.HEADER}--- Step {step_num}: {title} ---{Colors.END}")
+    logger.info(f"\n{Colors.BOLD}{Colors.HEADER}--- Step {step_num}: {title} ---{Colors.END}")
+
+def get_project_version():
+    """Helper to read the project version from version.json."""
+    version = "1.2.0"
+    try:
+        version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
+        if os.path.exists(version_path):
+            with open(version_path, 'r', encoding='utf-8') as f:
+                version = json.load(f).get('version', '1.2.0')
+    except Exception:
+        pass
+    return version
+
+def xml_escape_attr(text):
+    """Escapes text for use inside XML attribute values (including quotes)."""
+    if not text:
+        return ""
+    return xml_escape(text).replace('"', '&quot;').replace("'", '&apos;')
+
 
 class BanglaNormalizer:
     @staticmethod
@@ -53,6 +101,14 @@ class BanglaNormalizer:
         """Normalizes raw Bangla text by standardizing Unicode characters, stripping punctuation and cleaning variants."""
         if not text:
             return ""
+        
+        # 0. Apply standard Unicode Normalization Form C (NFC)
+        text = unicodedata.normalize('NFC', text)
+        
+        # Standardize Nuqta decomposition to combined Unicode characters
+        text = text.replace('\u09b0\u09bc', '\u09dc') # র + ় -> ড়
+        text = text.replace('\u09a2\u09bc', '\u09dd') # ঢ + ় -> ঢ়
+        text = text.replace('\u09af\u09bc', '\u09df') # য + ় -> য়
         
         # 1. Strip whitespace
         text = text.strip()
@@ -89,13 +145,77 @@ class EnglishMorphologyEngine:
         'teach': ['teaches', 'taught', 'teaching'],
         'write': ['writes', 'wrote', 'written', 'writing'],
         'go': ['goes', 'went', 'gone', 'going'],
-        'run': ['runs', 'ran', 'running']
+        'run': ['runs', 'ran', 'running'],
+        'do': ['does', 'did', 'done', 'doing'],
+        'see': ['sees', 'saw', 'seen', 'seeing'],
+        'have': ['has', 'had', 'having'],
+        'bring': ['brings', 'brought', 'bringing'],
+        'buy': ['buys', 'bought', 'buying'],
+        'catch': ['catches', 'caught', 'catching'],
+        'think': ['thinks', 'thought', 'thinking'],
+        'take': ['takes', 'took', 'taken', 'taking'],
+        'make': ['makes', 'made', 'making'],
+        'give': ['gives', 'gave', 'given', 'giving'],
+        'come': ['comes', 'came', 'coming'],
+        'find': ['finds', 'found', 'finding'],
+        'get': ['gets', 'got', 'gotten', 'getting'],
+        'say': ['says', 'said', 'saying'],
+        'know': ['knows', 'knew', 'known', 'knowing'],
+        'tell': ['tells', 'told', 'telling'],
+        'speak': ['speaks', 'spoke', 'spoken', 'speaking'],
+        'lose': ['loses', 'lost', 'losing'],
+        'send': ['sends', 'sent', 'sending'],
+        'spend': ['spends', 'spent', 'spending'],
+        'build': ['builds', 'built', 'building'],
+        'lend': ['lends', 'lent', 'lending'],
+        'cut': ['cuts', 'cutting'],
+        'put': ['puts', 'putting'],
+        'hit': ['hits', 'hitting'],
+        'let': ['lets', 'letting'],
+        'set': ['sets', 'setting'],
+        'hurt': ['hurts', 'hurting'],
+        'cost': ['costs', 'costing'],
+        'shut': ['shuts', 'shutting'],
+        'read': ['reads', 'read', 'reading']
     }
     
     IRREGULAR_NOUNS = {
         'child': ['children'],
         'mouse': ['mice'],
-        'foot': ['feet']
+        'foot': ['feet'],
+        'man': ['men'],
+        'woman': ['women'],
+        'tooth': ['teeth'],
+        'goose': ['geese'],
+        'person': ['people'],
+        'ox': ['oxen'],
+        'louse': ['lice'],
+        'die': ['dice'],
+        'focus': ['focuses', 'foci'],
+        'nucleus': ['nucleuses', 'nuclei'],
+        'radius': ['radiuses', 'radii'],
+        'index': ['indexes', 'indices'],
+        'vertex': ['vertexes', 'vertices'],
+        'matrix': ['matrixes', 'matrices'],
+        'datum': ['data'],
+        'medium': ['media'],
+        'analysis': ['analyses'],
+        'crisis': ['crises'],
+        'thesis': ['theses'],
+        'parenthesis': ['parentheses'],
+        'oasis': ['oases'],
+        'life': ['lives'],
+        'knife': ['knives'],
+        'leaf': ['leaves'],
+        'wife': ['wives'],
+        'half': ['halves'],
+        'thief': ['thieves'],
+        'wolf': ['wolves'],
+        'shelf': ['shelves'],
+        'calf': ['calves'],
+        'loaf': ['loaves'],
+        'sheaf': ['sheaves'],
+        'elf': ['elves']
     }
 
     @classmethod
@@ -151,16 +271,17 @@ class EnglishMorphologyEngine:
                 forms.add(lemma + 's')
                 
         elif pos in ['adjective', 'adj']:
-            # Comparative/Superlative suffixes
-            if lemma.endswith('y') and not lemma[-2] in 'aeiou':
-                forms.add(lemma[:-1] + 'ier')
-                forms.add(lemma[:-1] + 'iest')
-            elif lemma.endswith('e'):
-                forms.add(lemma + 'r')
-                forms.add(lemma + 'st')
-            else:
-                forms.add(lemma + 'er')
-                forms.add(lemma + 'est')
+            # Comparative/Superlative suffixes only for short adjectives (length <= 5)
+            if len(lemma) <= 5:
+                if lemma.endswith('y') and not lemma[-2] in 'aeiou':
+                    forms.add(lemma[:-1] + 'ier')
+                    forms.add(lemma[:-1] + 'iest')
+                elif lemma.endswith('e'):
+                    forms.add(lemma + 'r')
+                    forms.add(lemma + 'st')
+                else:
+                    forms.add(lemma + 'er')
+                    forms.add(lemma + 'est')
         
         return list(forms)
 
@@ -169,64 +290,121 @@ class BanglaMorphologyEngine:
     NOUN_SUFFIXES = ['টি', 'টা', 'গুলো', 'গুলি', 'দের', 'র', 'এর', 'কে', 'তে', 'এ', 'য়ে']
     
     @classmethod
-    def generate_inflections(cls, lemma):
-        """Generates common Bangla inflections/case endings for a base lemma."""
+    def generate_inflections(cls, lemma, pos=None):
+        """Generates common Bangla inflections (nominal suffixes or verbal tenses) based on POS."""
         lemma = lemma.strip()
         forms = set()
         if len(lemma) < 2:
             return []
-        for suffix in cls.NOUN_SUFFIXES:
-            if not lemma.endswith(suffix):
-                forms.add(lemma + suffix)
+            
+        is_verb = False
+        if pos:
+            pos_lower = pos.lower()
+            if any(x in pos_lower for x in ['verb', 'v', 'ক্রিয়া', 'ক্রি.']):
+                is_verb = True
+                
+        if is_verb:
+            # Verbal Conjugation Heuristics
+            if lemma.endswith('ওয়া'):
+                # Verbs like খাওয়া, পাওয়া
+                base = lemma[:-3]
+                forms.add(base + 'ই')
+                forms.add(base + 'স')
+                forms.add(base + 'য়')
+                forms.add(base + 'ন')
+                forms.add(base + 'চ্ছ')
+                forms.add(base + 'চ্ছি')
+                forms.add(base + 'চ্ছে')
+                forms.add(base + 'চ্ছেন')
+                forms.add(base + 'ব')
+                forms.add(base + 'বে')
+                forms.add(base + 'বেন')
+                # Vowel shifted past tenses for standard verbs
+                if base in ['খা', 'পা', 'যা']:
+                    shifted_base = 'খে' if base == 'খা' else ('পে' if base == 'পা' else 'গে')
+                    forms.add(shifted_base + 'লাম')
+                    forms.add(shifted_base + 'লে')
+                    forms.add(shifted_base + 'লেন')
+                    forms.add(shifted_base + 'ত')
+                    forms.add(shifted_base + 'তেন')
+                    forms.add(shifted_base + 'তে')
+            elif lemma.endswith('া'):
+                # Standard verbs like করা, দেখা, বলা
+                base = lemma[:-1]
+                for end in ['ি', 'িস', 'ে', 'েন', 'ছ', 'ছি', 'ছে', 'ছেন', 'ব', 'বে', 'বেন', 'লে', 'তে', 'ত', 'ুন', 'লাম', 'লেন', 'তেন']:
+                    forms.add(base + end)
+            else:
+                # Fallback base conjugation
+                base = lemma
+                for end in ['ি', 'িস', 'ে', 'েন', 'ছ', 'ছি', 'ছে', 'ছেন', 'ব', 'বে', 'বেন', 'লে', 'তে', 'ত', 'ুন', 'লাম', 'লেন', 'তেন']:
+                    forms.add(base + end)
+        else:
+            # Nominal/Noun Suffix Heuristics
+            for suffix in cls.NOUN_SUFFIXES:
+                if not lemma.endswith(suffix):
+                    forms.add(lemma + suffix)
+                    
         return list(forms)
 
 
 def init_database(db_name=DB_NAME):
     """Initializes the SQLite database with staging and master tables."""
     conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    
-    # 1. Source Ingestion Table (Provenance & Audit Trail)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS source_ingestion (
-        ingestion_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        source_name TEXT NOT NULL,
-        source_license TEXT NOT NULL,
-        headword_raw TEXT NOT NULL,
-        lookup_direction TEXT NOT NULL,   -- 'en-bn' or 'bn-en'
-        pos_raw TEXT,
-        sense_text_raw TEXT NOT NULL,
-        example_raw TEXT,
-        import_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-    
-    # 2. Master Lexicon Table (Deduplicated, Sense-Clustered & Cleaned)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS master_lexicon (
-        lemma_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        lemma TEXT NOT NULL,
-        normalized_lemma TEXT NOT NULL,
-        lookup_direction TEXT NOT NULL,   -- 'en-bn' or 'bn-en'
-        pos TEXT,
-        senses_json TEXT NOT NULL,        -- JSON array of structured Senses
-        inflections_json TEXT,            -- JSON array of hidden inflection aliases
-        source_attributions TEXT          -- comma-separated source credits
-    );
-    """)
-    
-    # Add Index for high performance
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_source_ingestion_hw ON source_ingestion (headword_raw, lookup_direction);")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_master_lexicon_hw ON master_lexicon (lemma, lookup_direction);")
-    
-    conn.commit()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        
+        # 1. Source Ingestion Table (Provenance & Audit Trail)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS source_ingestion (
+            ingestion_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_name TEXT NOT NULL,
+            source_license TEXT NOT NULL,
+            headword_raw TEXT NOT NULL,
+            lookup_direction TEXT NOT NULL,   -- 'en-bn' or 'bn-en'
+            pos_raw TEXT,
+            sense_text_raw TEXT NOT NULL,
+            example_raw TEXT,
+            import_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+        
+        # 2. Master Lexicon Table (Deduplicated, Sense-Clustered & Cleaned)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS master_lexicon (
+            lemma_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            lemma TEXT NOT NULL,
+            normalized_lemma TEXT NOT NULL,
+            lookup_direction TEXT NOT NULL,   -- 'en-bn' or 'bn-en'
+            pos TEXT,
+            senses_json TEXT NOT NULL,        -- JSON array of structured Senses
+            inflections_json TEXT,            -- JSON array of hidden inflection aliases
+            source_attributions TEXT          -- comma-separated source credits
+        );
+        """)
+        
+        # Add Index for high performance
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_source_ingestion_hw ON source_ingestion (headword_raw, lookup_direction);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_master_lexicon_hw ON master_lexicon (lemma, lookup_direction);")
+        
+        # Add expression-based indexes for lower case grouping and sorting
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_source_ingestion_lower ON source_ingestion (LOWER(headword_raw), lookup_direction);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_master_lexicon_lower ON master_lexicon (lookup_direction, LOWER(lemma));")
+        
+        conn.commit()
+    finally:
+        conn.close()
     log_success("Database schemas and indices verified successfully!")
 
 
 def populate_staging(db_name=DB_NAME):
     """Reads actual dictionary files from MinhasKamal, Ridmik, and Aparajeyo, and ingests them into staging."""
     conn = sqlite3.connect(db_name)
+    try:
+        _populate_staging_impl(conn)
+    finally:
+        conn.close()
+
+def _populate_staging_impl(conn):
     cursor = conn.cursor()
     
     # Clear previous run
@@ -244,7 +422,7 @@ def populate_staging(db_name=DB_NAME):
                 if len(row) >= 2 and row[0].strip() and row[1].strip():
                     minhas_records.append((
                         'MinhasKamal',
-                        'GPLv3',
+                        'MIT',
                         row[0].strip(),
                         'en-bn',
                         None,
@@ -497,6 +675,10 @@ def populate_staging(db_name=DB_NAME):
                 cleaned_def = re.sub(r'<br\s*([^>]*)>', r'<br />', definition)
                 # Standardize & not followed by an entity to &amp;
                 cleaned_def = re.sub(r'&(?!#[0-9]+;)(?![a-zA-Z0-9]+;)', r'&amp;', cleaned_def)
+                # Replace undefined HTML non-breaking space with XML numeric entity
+                cleaned_def = cleaned_def.replace('&nbsp;', '&#160;')
+                # Strip trailing empty/unclosed tags (like class wrapper elements)
+                cleaned_def = re.sub(r'<[a-zA-Z0-9]+\s*[^>]*>\s*$', '', cleaned_def.strip())
                 
                 for w in words:
                     muntashir_records.append((
@@ -526,8 +708,6 @@ def populate_staging(db_name=DB_NAME):
         log_success(f"Successfully ingested {len(all_records):,} total raw records!")
     else:
         log_warning("No source files were found, and no records were ingested.")
-        
-    conn.close()
 
 
 def normalize_meaning(text, direction):
@@ -548,6 +728,12 @@ def normalize_meaning(text, direction):
 def build_master_lexicon(db_name=DB_NAME):
     """Merges raw staging entries, normalizes them, clusters senses, generates inflections, and inserts into master_lexicon."""
     conn = sqlite3.connect(db_name)
+    try:
+        _build_master_lexicon_impl(conn)
+    finally:
+        conn.close()
+
+def _build_master_lexicon_impl(conn):
     cursor = conn.cursor()
     
     # Reset master
@@ -726,7 +912,7 @@ def build_master_lexicon(db_name=DB_NAME):
                 inflections.extend(morph_engine.generate_inflections(lemma, p))
             inflections = list(set(inflections))  # Deduplicate
         elif direction in ['bn-en', 'bn-bn']:
-            inflections = BanglaMorphologyEngine.generate_inflections(lemma)
+            inflections = BanglaMorphologyEngine.generate_inflections(lemma, dominant_pos)
             
         batch.append((
             lemma,
@@ -748,7 +934,6 @@ def build_master_lexicon(db_name=DB_NAME):
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """, batch)
     conn.commit()
-    conn.close()
     
     elapsed = time.time() - start_time
     log_success(f"Master Lexicon successfully populated in {elapsed:.2f}s! ({len(batch):,} records)")
@@ -761,16 +946,7 @@ class KindleDictionaryCompiler:
         self.db_name = db_name
         self.entries_per_shard = entries_per_shard
         
-        # Load version from version.json
-        version = "1.2.0"
-        try:
-            version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
-            if os.path.exists(version_path):
-                with open(version_path, 'r', encoding='utf-8') as f:
-                    version = json.load(f).get('version', '1.2.0')
-        except Exception:
-            pass
-        self.version = version
+        self.version = get_project_version()
 
         # Direction specific metadata
         if direction == 'en-bn':
@@ -816,13 +992,15 @@ class KindleDictionaryCompiler:
     def render_entry_xhtml(self, lemma, pos, senses, inflections):
         """Compiles structured entry content into Kindle-compatible XHTML markup."""
         escaped_lemma = xml_escape(lemma)
+        escaped_lemma_attr = xml_escape_attr(lemma)
         
         # Build inflections block if any
         inflections_xml = ""
         if inflections:
-            inflections_xml = f'    <idx:infl inflgrp="{xml_escape(pos)}">\n'
+            escaped_pos_attr = xml_escape_attr(pos if pos else 'unk')
+            inflections_xml = f'    <idx:infl inflgrp="{escaped_pos_attr}">\n'
             for infl in inflections:
-                inflections_xml += f'      <idx:iform value="{xml_escape(infl)}"/>\n'
+                inflections_xml += f'      <idx:iform value="{xml_escape_attr(infl)}"/>\n'
             inflections_xml += '    </idx:infl>\n'
             
         # Check if we have a pronunciation in any sense
@@ -875,10 +1053,10 @@ class KindleDictionaryCompiler:
         entry_xml = f"""
         <idx:entry name="{self.index_name}" scriptable="yes" spell="yes">
           <idx:short>
-            <idx:orth value="{escaped_lemma}">
+            <idx:orth value="{escaped_lemma_attr}">
               <b>{escaped_lemma}</b>{pron_xml}
-{inflections_xml}            </idx:orth>
-            {senses_html}
+            </idx:orth>
+{inflections_xml}            {senses_html}
           </idx:short>
         </idx:entry>
         <hr/>
@@ -888,15 +1066,17 @@ class KindleDictionaryCompiler:
     def compile_xhtml_shards(self):
         """Fetches master data and writes sharded XHTML files in build directory."""
         conn = sqlite3.connect(self.db_name)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT lemma, pos, senses_json, inflections_json 
-            FROM master_lexicon 
-            WHERE lookup_direction = ?
-            ORDER BY LOWER(lemma) ASC
-        """, (self.direction,))
-        rows = cursor.fetchall()
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT lemma, pos, senses_json, inflections_json 
+                FROM master_lexicon 
+                WHERE lookup_direction = ?
+                ORDER BY LOWER(lemma) ASC
+            """, (self.direction,))
+            rows = cursor.fetchall()
+        finally:
+            conn.close()
         
         shard_files = []
         shard_idx = 0
@@ -905,6 +1085,8 @@ class KindleDictionaryCompiler:
         if total_entries == 0:
             return []
             
+        import xml.etree.ElementTree as ET
+        
         for i in range(0, total_entries, self.entries_per_shard):
             chunk = rows[i:i+self.entries_per_shard]
             filename = f"content_{shard_idx}.html"
@@ -940,6 +1122,18 @@ class KindleDictionaryCompiler:
 </body>
 </html>
 """)
+            
+            # Validate well-formedness to catch markup errors early
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    xml_content = f.read()
+                # Strip DOCTYPE to prevent external DTD loading overhead/network errors
+                clean_xml = re.sub(r'<!DOCTYPE[^>]*>', '', xml_content)
+                ET.fromstring(clean_xml)
+            except ET.ParseError as e:
+                log_error(f"XHTML Well-Formedness Error in shard file '{filename}': {e}")
+                # We do not crash the pipeline but alert the developer clearly
+                
             shard_files.append(filename)
             shard_idx += 1
             
@@ -1009,19 +1203,21 @@ def print_statistics(db_name=DB_NAME):
         return
         
     conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    
-    # Get stats for each raw source
-    cursor.execute("SELECT source_name, count(*) FROM source_ingestion GROUP BY source_name")
-    source_counts = cursor.fetchall()
-    
-    # Get total unique master entries per direction
-    cursor.execute("SELECT lookup_direction, count(*) FROM master_lexicon GROUP BY lookup_direction")
-    direction_counts = cursor.fetchall()
-    
-    cursor.execute("SELECT count(*) FROM master_lexicon")
-    total_master = cursor.fetchone()[0]
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        
+        # Get stats for each raw source
+        cursor.execute("SELECT source_name, count(*) FROM source_ingestion GROUP BY source_name")
+        source_counts = cursor.fetchall()
+        
+        # Get total unique master entries per direction
+        cursor.execute("SELECT lookup_direction, count(*) FROM master_lexicon GROUP BY lookup_direction")
+        direction_counts = cursor.fetchall()
+        
+        cursor.execute("SELECT count(*) FROM master_lexicon")
+        total_master = cursor.fetchone()[0]
+    finally:
+        conn.close()
     
     print("\n" + f"{Colors.BOLD}{Colors.CYAN}┌──────────────────────────────────────────────────────────────────────┐")
     print(f"│               📊 FINAL DICTIONARY STATS & SUMMARY                    │")
@@ -1064,121 +1260,132 @@ def preview_entry(lemma, db_name=DB_NAME):
     directions = ['en-bn'] if is_english else ['bn-en', 'bn-bn']
     
     conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    
-    found_any = False
-    for direction in directions:
-        cursor.execute("""
-            SELECT lemma, pos, senses_json, inflections_json, source_attributions 
-            FROM master_lexicon 
-            WHERE LOWER(lemma) = ? AND lookup_direction = ?
-        """, (lemma.lower(), direction))
-        row = cursor.fetchone()
-        if not row:
-            continue
-            
-        found_any = True
-        lemma_val, pos, senses_json, inflections_json, sources = row
-        senses = json.loads(senses_json)
-        inflections = json.loads(inflections_json) if inflections_json else []
+    try:
+        cursor = conn.cursor()
         
-        # Extract pronunciation if present in any sense
-        pron_val = ""
-        for s in senses:
-            if s.get('pronunciation'):
-                pron_val = f" {Colors.BLUE}{s['pronunciation']}{Colors.END}"
-                break
+        found_any = False
+        for direction in directions:
+            cursor.execute("""
+                SELECT lemma, pos, senses_json, inflections_json, source_attributions 
+                FROM master_lexicon 
+                WHERE LOWER(lemma) = ? AND lookup_direction = ?
+            """, (lemma.lower(), direction))
+            row = cursor.fetchone()
+            if not row:
+                continue
                 
-        primary_sense = senses[0] if senses else {}
-        dir_title = "Bangla-to-Bangla (bn-bn)" if direction == 'bn-bn' else ("Bangla-to-English (bn-en)" if direction == 'bn-en' else "English-to-Bangla (en-bn)")
-        
-        if primary_sense.get('source') == 'MuntashirAkon':
-            import html as py_html
-            raw_html = primary_sense['meanings'][0]
-            clean_lines = []
-            text = py_html.unescape(raw_html)
-            text = re.sub(r'</?p>|<br\s*/?>', '\n', text)
-            text = re.sub(r'<[^>]+>', '', text)
-            for line in text.split('\n'):
-                l = line.strip()
-                if l:
-                    clean_lines.append(l)
+            found_any = True
+            lemma_val, pos, senses_json, inflections_json, sources = row
+            senses = json.loads(senses_json)
+            inflections = json.loads(inflections_json) if inflections_json else []
             
-            # 1. RENDER POPUP BUBBLE
-            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
-            print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
-            for idx, line in enumerate(clean_lines[:4]):
-                print(f"│  {Colors.BOLD if idx == 0 else Colors.END}{Colors.GREEN if idx == 0 else ''}{line}{Colors.END}")
-            if len(clean_lines) > 4:
-                print(f"│  ...")
-            if inflections:
-                print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
-            print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
-            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
-            
-            # 2. RENDER FULL PAGE VIEW
-            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
-            print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
-            print(f"│  Attributed Sources: {sources}")
-            print("│")
-            print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
-            for line in clean_lines:
-                print(f"│    {line}")
-            if inflections:
-                print("│")
-                print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
-                print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
-            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
-        else:
-            primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
-            secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
-            context_tag = f" ({Colors.YELLOW}{primary_sense.get('context')}{Colors.END})" if primary_sense.get('context') else ""
-            
-            # 1. RENDER POPUP BUBBLE
-            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
-            print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
-            print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
-            if inflections:
-                print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
-            print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
-            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
-            
-            # 2. RENDER FULL PAGE VIEW
-            print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
-            print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
-            print(f"│  Attributed Sources: {sources}")
-            print("│")
-            print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
-            for idx, sense in enumerate(senses):
-                meanings = ", ".join(sense['meanings'])
-                context_str = f" ({Colors.YELLOW}{sense['context']}{Colors.END})" if sense.get('context') else ""
-                print(f"│    {idx+1}. [{Colors.CYAN}{sense['pos']}{Colors.END}]{context_str} {Colors.BOLD}{meanings}{Colors.END}")
-                if sense.get('example_en'):
-                    print(f"│       {Colors.GREEN}💬 En: {sense['example_en']}{Colors.END}")
-                    if sense.get('example_bn'):
-                        print(f"│       {Colors.GREEN}   Bn: {sense['example_bn']}{Colors.END}")
-                elif sense.get('example'):
-                    print(f"│       {Colors.GREEN}💬 Example: {sense['example']}{Colors.END}")
+            # Extract pronunciation if present in any sense
+            pron_val = ""
+            for s in senses:
+                if s.get('pronunciation'):
+                    pron_val = f" {Colors.BLUE}{s['pronunciation']}{Colors.END}"
+                    break
                     
-            if inflections:
+            primary_sense = senses[0] if senses else {}
+            dir_title = "Bangla-to-Bangla (bn-bn)" if direction == 'bn-bn' else ("Bangla-to-English (bn-en)" if direction == 'bn-en' else "English-to-Bangla (en-bn)")
+            
+            if primary_sense.get('source') == 'MuntashirAkon':
+                import html as py_html
+                raw_html = primary_sense['meanings'][0]
+                clean_lines = []
+                text = py_html.unescape(raw_html)
+                text = re.sub(r'</?p>|<br\s*/?>', '\n', text)
+                text = re.sub(r'<[^>]+>', '', text)
+                for line in text.split('\n'):
+                    l = line.strip()
+                    if l:
+                        clean_lines.append(l)
+                
+                # 1. RENDER POPUP BUBBLE
+                print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
+                print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+                for idx, line in enumerate(clean_lines[:4]):
+                    print(f"│  {Colors.BOLD if idx == 0 else Colors.END}{Colors.GREEN if idx == 0 else ''}{line}{Colors.END}")
+                if len(clean_lines) > 4:
+                    print(f"│  ...")
+                if inflections:
+                    print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
+                print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
+                print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
+                
+                # 2. RENDER FULL PAGE VIEW
+                print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
+                print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+                print(f"│  Attributed Sources: {sources}")
                 print("│")
-                print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
-                print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
-            print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+                print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
+                for line in clean_lines:
+                    print(f"│    {line}")
+                if inflections:
+                    print("│")
+                    print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
+                    print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
+                print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+            else:
+                primary_meaning = primary_sense.get('meanings', [""])[0] if primary_sense.get('meanings') else ""
+                secondary_meanings = ", ".join(primary_sense.get('meanings', [])[1:4]) if len(primary_sense.get('meanings', [])) > 1 else ""
+                context_tag = f" ({Colors.YELLOW}{primary_sense.get('context')}{Colors.END})" if primary_sense.get('context') else ""
+                
+                # 1. RENDER POPUP BUBBLE
+                print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📱 Kindle Lookup Popup Preview ({dir_title}) ]──────────────────────────────────┐{Colors.END}")
+                print(f"│  {Colors.BOLD}{lemma_val:<25}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}{context_tag}")
+                print(f"│  {Colors.BOLD}{Colors.GREEN}{primary_meaning}{Colors.END}" + (f" ({secondary_meanings})" if secondary_meanings else ""))
+                if inflections:
+                    print(f"│  {Colors.YELLOW}🔗 Inflections:{Colors.END} {', '.join(inflections)}")
+                print(f"│  {Colors.BLUE}Source credits:{Colors.END} {sources}")
+                print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}")
+                
+                # 2. RENDER FULL PAGE VIEW
+                print(f"\n{Colors.BOLD}{Colors.HEADER}┌──[ 📖 Kindle Full Page View Mockup ({dir_title}) ]─────────────────────────────────┐{Colors.END}")
+                print(f"│  {Colors.BOLD}{Colors.UNDERLINE}{lemma_val.upper()}{Colors.END}{pron_val} {Colors.CYAN}({pos}){Colors.END}")
+                print(f"│  Attributed Sources: {sources}")
+                print("│")
+                print(f"│  {Colors.BOLD}Senses & Contexts:{Colors.END}")
+                for idx, sense in enumerate(senses):
+                    meanings = ", ".join(sense['meanings'])
+                    context_str = f" ({Colors.YELLOW}{sense['context']}{Colors.END})" if sense.get('context') else ""
+                    print(f"│    {idx+1}. [{Colors.CYAN}{sense['pos']}{Colors.END}]{context_str} {Colors.BOLD}{meanings}{Colors.END}")
+                    if sense.get('example_en'):
+                        print(f"│       {Colors.GREEN}💬 En: {sense['example_en']}{Colors.END}")
+                        if sense.get('example_bn'):
+                            print(f"│       {Colors.GREEN}   Bn: {sense['example_bn']}{Colors.END}")
+                    elif sense.get('example'):
+                        print(f"│       {Colors.GREEN}💬 Example: {sense['example']}{Colors.END}")
+                        
+                if inflections:
+                    print("│")
+                    print(f"│  {Colors.BOLD}Hidden Inflection Index Aliases:{Colors.END}")
+                    print(f"│    {Colors.YELLOW}{', '.join(inflections)}{Colors.END}")
+                print(f"{Colors.HEADER}└──────────────────────────────────────────────────────────────────────┘{Colors.END}\n")
+    finally:
+        conn.close()
         
-    conn.close()
     if not found_any:
         log_error(f"Entry '{lemma}' not found in the master database.")
+        # Near-match search
+        conn = sqlite3.connect(db_name)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT DISTINCT lemma FROM master_lexicon 
+                WHERE LOWER(lemma) LIKE ? OR LOWER(lemma) LIKE ?
+                LIMIT 5
+            """, (f"%{lemma.lower()}%", f"{lemma.lower()}%"))
+            suggestions = [r[0] for r in cursor.fetchall()]
+            if suggestions:
+                print(f"👉 Did you mean: {Colors.YELLOW}{', '.join(suggestions)}{Colors.END}?")
+        except Exception:
+            pass
+        finally:
+            conn.close()
     
 def print_banner():
-    version = "1.2.0"
-    try:
-        version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
-        if os.path.exists(version_path):
-            with open(version_path, 'r', encoding='utf-8') as f:
-                version = json.load(f).get('version', '1.2.0')
-    except Exception:
-        pass
+    version = get_project_version()
 
     banner = f"""
 {Colors.CYAN}██████╗ ██╗██╗     ██╗███╗   ██╗ ██████╗ ██╗   ██╗ █████╗ ██╗     
@@ -1208,26 +1415,40 @@ def compile_mobi(opf_path, output_mobi_path):
     
     # 2. Search for kindlegen in local workspace folder
     if not kindlegen_path:
-        local_path = os.path.abspath('./kindlegen')
-        if os.path.exists(local_path) and os.access(local_path, os.X_OK):
-            kindlegen_path = local_path
+        local_names = ['kindlegen.exe', 'kindlegen'] if sys.platform == 'win32' else ['kindlegen']
+        for name in local_names:
+            local_path = os.path.abspath(f'./{name}')
+            if os.path.exists(local_path):
+                if sys.platform == 'win32' or os.access(local_path, os.X_OK):
+                    kindlegen_path = local_path
+                    break
             
-    # 3. Check standard macOS Kindle Previewer application paths for kindlegen
+    # 3. Check standard application paths for Kindle Previewer
     if not kindlegen_path:
-        common_paths = [
-            "/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen",
-            "/Applications/Kindle Previewer 3.app/Contents/MacOS/lib/fc/bin/kindlegen",
-            "/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen.exe",
-            "/Applications/Kindle Previewer.app/Contents/lib/fc/bin/kindlegen"
-        ]
+        common_paths = []
+        if sys.platform == 'darwin':
+            common_paths = [
+                "/Applications/Kindle Previewer 3.app/Contents/lib/fc/bin/kindlegen",
+                "/Applications/Kindle Previewer 3.app/Contents/MacOS/lib/fc/bin/kindlegen",
+                "/Applications/Kindle Previewer.app/Contents/lib/fc/bin/kindlegen"
+            ]
+        elif sys.platform == 'win32':
+            local_appdata = os.environ.get('LOCALAPPDATA', '')
+            user_profile = os.environ.get('USERPROFILE', '')
+            if local_appdata:
+                common_paths.append(os.path.join(local_appdata, r"Amazon\Kindle Previewer 3\lib\fc\bin\kindlegen.exe"))
+            if user_profile:
+                common_paths.append(os.path.join(user_profile, r"AppData\Local\Amazon\Kindle Previewer 3\lib\fc\bin\kindlegen.exe"))
+                
         for p in common_paths:
             if os.path.exists(p):
-                # Ensure the binary has execute permissions
-                try:
-                    if not os.access(p, os.X_OK):
-                        os.chmod(p, 0o755)
-                except Exception as e:
-                    log_warning(f"Could not set execute permission on {p}: {e}")
+                # Ensure the binary has execute permissions (macOS/Linux)
+                if sys.platform != 'win32':
+                    try:
+                        if not os.access(p, os.X_OK):
+                            os.chmod(p, 0o755)
+                    except Exception as e:
+                        log_warning(f"Could not set execute permission on {p}: {e}")
                 kindlegen_path = p
                 break
                 
@@ -1255,6 +1476,24 @@ def compile_mobi(opf_path, output_mobi_path):
     return False
 
 
+def cleanup_database(db_name=DB_NAME):
+    """Drops the temporary staging table and vacuums the database to optimize size."""
+    if not os.path.exists(db_name):
+        return
+    log_info("Cleaning up staging tables and vacuuming database...")
+    conn = sqlite3.connect(db_name)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS source_ingestion")
+        cursor.execute("VACUUM")
+        conn.commit()
+        log_success("Database shrunk and optimized successfully!")
+    except Exception as e:
+        log_warning(f"Failed to cleanup database: {e}")
+    finally:
+        conn.close()
+
+
 def main():
     print_banner()
     
@@ -1262,6 +1501,7 @@ def main():
     parser.add_argument('-r', '--rebuild', action='store_true', help="Force clear database and run full raw ingestion from scratch.")
     parser.add_argument('-c', '--compile-only', action='store_true', help="Skip database ingestion and only compile XHTML/OPF files from existing database.")
     parser.add_argument('-p', '--preview', type=str, metavar="WORD", help="Query a word and display a beautiful terminal preview of its Kindle layout.")
+    parser.add_argument('--cleanup', action='store_true', help="Drop staging tables and vacuum database post-build to reduce disk footprint.")
     args = parser.parse_args()
     
     # 1. Preview Mode: Immediately run preview and exit
@@ -1334,15 +1574,7 @@ def main():
         # 4. Auto-compile MOBI files if tools are available
         log_step(5, "Auto-Compiling MOBI E-Books")
         
-        # Load version from version.json
-        version = "1.2.0"
-        try:
-            version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'version.json')
-            if os.path.exists(version_path):
-                with open(version_path, 'r', encoding='utf-8') as f:
-                    version = json.load(f).get('version', '1.2.0')
-        except Exception:
-            pass
+        version = get_project_version()
             
         en_bn_filename = f"Shobdo_Vandar_en-bn_v{version}.mobi"
         bn_en_filename = f"Shobdo_Vandar_bn-en_v{version}.mobi"
@@ -1373,6 +1605,10 @@ def main():
         log_step(6, "Final Data Reports & Validation")
         print_statistics()
         
+        # Cleanup staging database if requested
+        if args.cleanup:
+            cleanup_database()
+            
         log_success("All pipeline stages completed successfully!")
         if en_bn_success or bn_en_success or bn_bn_success:
             print(f"\n{Colors.BOLD}{Colors.GREEN}🎉 SUCCESS! Your MOBI e-books have been compiled directly in:{Colors.END}")
@@ -1388,6 +1624,12 @@ def main():
             print(f"   kindlegen ./build/en-bn/dict.opf -o {en_bn_filename}")
             print(f"   kindlegen ./build/bn-en/dict.opf -o {bn_en_filename}")
             print(f"   kindlegen ./build/bn-bn/dict.opf -o {bn_bn_filename}\n")
+            
+        # CI/CD failure propagation: Fail building if compiler fails on CI
+        if os.environ.get('GITHUB_ACTIONS') == 'true':
+            if not (en_bn_success and bn_en_success and bn_bn_success):
+                log_error("MOBI compilation failed for one or more targets in CI environment!")
+                sys.exit(1)
 
 if __name__ == '__main__':
     try:

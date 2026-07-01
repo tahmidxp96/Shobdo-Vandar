@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
               // Let's find the specific stat-item containing file size
               const cardStats = dlEnBnBtn.closest('.download-card').querySelectorAll('.stat-item');
               cardStats.forEach(stat => {
-                if (stat.querySelector('.stat-label').textContent.includes('SIZE')) {
+                if (stat.querySelector('.stat-label').textContent.toUpperCase().includes('SIZE')) {
                   stat.querySelector('.stat-val').textContent = `~${sizeMB}`;
                 }
               });
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sizeMB) {
               const cardStats = dlBnEnBtn.closest('.download-card').querySelectorAll('.stat-item');
               cardStats.forEach(stat => {
-                if (stat.querySelector('.stat-label').textContent.includes('SIZE')) {
+                if (stat.querySelector('.stat-label').textContent.toUpperCase().includes('SIZE')) {
                   stat.querySelector('.stat-val').textContent = `~${sizeMB}`;
                 }
               });
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sizeMB) {
               const cardStats = dlBnBnBtn.closest('.download-card').querySelectorAll('.stat-item');
               cardStats.forEach(stat => {
-                if (stat.querySelector('.stat-label').textContent.includes('SIZE')) {
+                if (stat.querySelector('.stat-label').textContent.toUpperCase().includes('SIZE')) {
                   stat.querySelector('.stat-val').textContent = `~${sizeMB}`;
                 }
               });

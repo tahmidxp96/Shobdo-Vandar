@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-07-01
+
+### Added
+- Added comprehensive unit testing suite (`tests/test_dictionary_builder.py`) validating normalizers, morphology, and XML rendering rules.
+- Added cross-platform auto-compiler detection supporting Windows Kindle Previewer paths.
+- Added interactive near-match suggestions to CLI word preview using case-insensitive SQL `LIKE` queries.
+- Added database post-build cleanup option (`--cleanup` CLI flag) to drop staging tables and run vacuuming.
+
+### Changed
+- Refactored Bangla Morphology Engine to perform POS-aware conjugations (verbs end in `ওয়া` or standard `া` vs nominal endings).
+- Enhanced English Morphology Engine with irregular rules and short adjective limits.
+- Wrapped SQLite connection lifecycles in safe `try...finally` resource managers.
+- Corrected MinhasKamal ingestion license metadata mapping from `GPLv3` to `MIT`.
+- Standardized logging under custom configuration writing to `build.log` and `sys.stdout` with ANSI filters.
+- Sanitized `MuntashirAkon` raw markup (converts `&nbsp;` to `&#160;` and strips trailing unclosed tags) to guarantee well-formed XHTML.
+
+### Fixed
+- Fixed layout nesting schema to place `<idx:infl>` inside `<idx:short>` (outside of `<idx:orth>`).
+- Added XML attribute quote-escaping for single and double quotes.
+- Fixed case-sensitivity metadata checking in frontend website (`docs/app.js`).
+- Propagated compilation failure exit codes in GitHub Actions headless runner.
+
+---
+
 ## [1.5.2] - 2026-05-26
 
 ### Changed

@@ -14,6 +14,8 @@ Thumbs.db
 
 # Large Database File
 /lexicon.db
+*.db
+*.log
 
 # Build artifacts
 /build/

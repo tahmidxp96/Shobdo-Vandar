@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /Applications/Kindle Previewer 3.app
-          key: ${{ runner.os }}-kindle-previewer-v3
+          key: ${{ runner.os }}-kindle-previewer-v3.1
 
       - name: Download Kindle Previewer macOS Installer
         if: steps.cache-kindle.outputs.cache-hit != 'true'
