@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dlBnBnBtn = document.getElementById('dl-bn-bn');
 
   // Fallback version static assets (used if API fails or rate-limits)
-  const defaultVersion = 'v1.5.2';
+  const defaultVersion = 'v1.6.0';
 
   function formatGitHubDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
