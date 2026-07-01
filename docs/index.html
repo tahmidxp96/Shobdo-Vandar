@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shobdo Vandar (শব্দ ভান্ডার) - High-Performance Kindle Dictionaries</title>
+  <meta name="description" content="A developer-centric reference project and high-performance compilation pipeline showing how to build custom, search-compliant Kindle bilingual and monolingual dictionaries.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Floating Background Letter Artifacts -->
+  <div class="bg-decorations">
+    <div class="floating-letter letter-1">A</div>
+    <div class="floating-letter letter-2 bangla">অ</div>
+    <div class="floating-letter letter-3">W</div>
+    <div class="floating-letter letter-4 bangla">ক</div>
+    <div class="floating-letter letter-5">Z</div>
+    <div class="floating-letter letter-6 bangla">আ</div>
+    <div class="floating-letter letter-7">X</div>
+    <div class="floating-letter letter-8 bangla">খ</div>
+    
+    <!-- Glowing background blur blobs -->
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+    <div class="glow-blob blob-3"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar" id="site-header">
+    <nav class="nav-container">
+      <a href="#" class="logo" id="nav-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          <path d="M12 6v13m-8-9h16" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>Shobdo Vandar</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#downloads">Downloads</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#installation">Installation</a></li>
+        <li><a href="#development">Developer Guide</a></li>
+        <li><a href="https://github.com/tahmidxp96/Shobdo-Vandar" class="nav-btn-github" target="_blank" id="nav-github-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          GitHub
+        </a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero" id="hero-section">
+      <div class="hero-content">
+        <div class="badge">Open Source Kindle Dictionaries</div>
+        <h1 class="hero-title">Breathe Life into Kindle Reading.</h1>
+        <p class="hero-desc">
+          Shobdo Vandar is a developer-centric reference project and high-performance compilation pipeline that stages, deduplicates, and compiles rich English & Bangla lexicographical datasets into high-fidelity, search-compliant Kindle dictionary formats.
+        </p>
+        <div class="hero-ctas">
+          <a href="#downloads" class="btn btn-primary" id="hero-btn-download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Get Latest Mobi
+          </a>
+          <a href="https://github.com/tahmidxp96/Shobdo-Vandar" target="_blank" class="btn btn-secondary" id="hero-btn-github">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+            </svg>
+            Repository
+          </a>
+        </div>
+      </div>
+
+      <!-- Kindle Interactive Simulator -->
+      <div class="hero-visual">
+        <div class="kindle-frame" id="kindle-simulator">
+          <div class="kindle-screen">
+            <div class="kindle-header">
+              <span>Shobdo Vandar Reader</span>
+              <span>12:00 PM</span>
+            </div>
+            <div class="kindle-text-content">
+              <p>Kindle e-readers allow readers to lookup meanings on-the-fly. If you encounter a <span class="kindle-word" data-word="benevolent">benevolent</span> guide or read classic Bengali <span class="kindle-word" data-word="literature">literature</span>, the instant pop-up window decodes the word seamlessly. Simply click the underlined words to test how our compiled <span class="kindle-word" data-word="dictionary">dictionary</span> files display definitions inside the Kindle preview lookup pane!</p>
+              <br>
+              <p>বাংলা শব্দভাণ্ডার সমৃদ্ধ করতে আমরা এই প্রকল্পে বিশদ বিশ্লেষণ করেছি। উদাহরণস্বরূপ, যদি আপনি একজন <span class="kindle-word" data-word="হিতৈষী">হিতৈষী</span> ব্যক্তির খোঁজ করেন, তবে তার পরিচয় এবং সঠিক বাংলা <span class="kindle-word" data-word="অভিধান">অভিধান</span> অর্থ সহজেই জানা সম্ভব হবে।</p>
+            </div>
+            
+            <!-- Dynamic Kindle Popup Panel -->
+            <div class="kindle-popup" id="kindle-lookup-popup">
+              <div class="kindle-popup-header">
+                <span id="popup-dict-source">Shobdo Vandar Dictionary</span>
+                <span class="kindle-popup-close" id="popup-close-btn">&times;</span>
+              </div>
+              <div class="kindle-popup-word" id="popup-word-title">Word</div>
+              <div class="kindle-popup-details">
+                <span class="kindle-popup-pos" id="popup-word-pos">pos</span>
+                <span id="popup-word-def">Definition text goes here.</span>
+              </div>
+            </div>
+          </div>
+          <div class="kindle-bezel-text">KINDLE</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Downloads Section -->
+    <section id="downloads">
+      <h2 class="section-title">Compiled Dictionaries</h2>
+      <div class="download-grid">
+        
+        <!-- Live GitHub Release Alert Info -->
+        <div class="release-info-bar" id="release-info-bar">
+          <div>
+            <span>Status: </span>
+            <span id="release-status-text"><span class="release-loader">⏳</span>Loading latest release details from GitHub...</span>
+          </div>
+          <div id="release-meta-container" style="display: none;">
+            Latest Release: <span class="release-version-tag" id="release-ver-tag">v1.5.2</span> 
+            (<span id="release-date">July 2026</span>)
+          </div>
+        </div>
+
+        <!-- English-to-Bangla Card -->
+        <div class="download-card">
+          <div class="card-lang">
+            <h3>English ➔ Bangla</h3>
+            <span class="lang-tag">en-bn</span>
+          </div>
+          <p class="text-secondary">Comprehensive vocabulary including POS markings, pronunciation guides, and rich synonym definitions.</p>
+          <div class="card-stats">
+            <div class="stat-item">
+              <span class="stat-label">Entries</span>
+              <span class="stat-val">94,348</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">File Size</span>
+              <span class="stat-val">~10.4 MB</span>
+            </div>
+          </div>
+          <a href="https://github.com/tahmidxp96/Shobdo-Vandar/releases/download/v1.5.2/Shobdo_Vandar_en-bn_v1.5.2.mobi" class="btn btn-primary card-download-btn" id="dl-en-bn" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Download .mobi
+          </a>
+        </div>
+
+        <!-- Bangla-to-English Card -->
+        <div class="download-card">
+          <div class="card-lang">
+            <h3>Bangla ➔ English</h3>
+            <span class="lang-tag">bn-en</span>
+          </div>
+          <p class="text-secondary">Accurate translations and equivalents for native Bengali terms designed for global readers.</p>
+          <div class="card-stats">
+            <div class="stat-item">
+              <span class="stat-label">Entries</span>
+              <span class="stat-val">50,928</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">File Size</span>
+              <span class="stat-val">~6.4 MB</span>
+            </div>
+          </div>
+          <a href="https://github.com/tahmidxp96/Shobdo-Vandar/releases/download/v1.5.2/Shobdo_Vandar_bn-en_v1.5.2.mobi" class="btn btn-primary card-download-btn" id="dl-bn-en" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Download .mobi
+          </a>
+        </div>
+
+        <!-- Bangla-to-Bangla Card -->
+        <div class="download-card">
+          <div class="card-lang">
+            <h3>Bangla ➔ Bangla</h3>
+            <span class="lang-tag">bn-bn</span>
+          </div>
+          <p class="text-secondary">Monolingual dictionary providing grammar outlines, etymological roots, and Sanskrit breakdowns.</p>
+          <div class="card-stats">
+            <div class="stat-item">
+              <span class="stat-label">Entries</span>
+              <span class="stat-val">46,552</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">File Size</span>
+              <span class="stat-val">~9.2 MB</span>
+            </div>
+          </div>
+          <a href="https://github.com/tahmidxp96/Shobdo-Vandar/releases/download/v1.5.2/Shobdo_Vandar_bn-bn_v1.5.2.mobi" class="btn btn-primary card-download-btn" id="dl-bn-bn" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Download .mobi
+          </a>
+        </div>
+
+      </div>
+      <p class="kindle-hint">Note: Dictionaries are in compiled Amazon MOBI format and can be side-loaded directly onto Kindle devices.</p>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture">
+      <h2 class="section-title">Pipeline Architecture</h2>
+      <div class="architecture-container">
+        <div class="arch-flow-grid">
+          
+          <!-- Column 1: Raw Datasets -->
+          <div class="arch-column">
+            <div class="arch-column-title">1. Raw Lexicons</div>
+            <div class="ingest-grid">
+              <div class="ingest-item">Aparajeyo</div>
+              <div class="ingest-item">MinhasKamal</div>
+              <div class="ingest-item">Ridmik</div>
+              <div class="ingest-item">Ankur</div>
+              <div class="ingest-item">Wiktionary</div>
+              <div class="ingest-item">Hunspell</div>
+              <div class="ingest-item">BoiBhai</div>
+              <div class="ingest-item">MuntashirAkon</div>
+            </div>
+          </div>
+          
+          <!-- Arrow -->
+          <div class="arch-arrow">➔</div>
+          
+          <!-- Column 2: Consolidation -->
+          <div class="arch-column">
+            <div class="arch-column-title">2. Normalization</div>
+            <div class="arch-box">
+              <span>SQLite Staging</span>
+              <span class="arch-box-badge">lexicon.db</span>
+            </div>
+            <div class="arch-box">
+              <span>Deduplication</span>
+              <span class="arch-box-badge">SQL</span>
+            </div>
+            <div class="arch-box">
+              <span>Enrichments</span>
+              <span class="arch-box-badge">JSON</span>
+            </div>
+          </div>
+          
+          <!-- Arrow -->
+          <div class="arch-arrow">➔</div>
+          
+          <!-- Column 3: Generation & Compilation -->
+          <div class="arch-column">
+            <div class="arch-column-title">3. Build & Compile</div>
+            <div class="arch-box">
+              <span>XHTML Sharding</span>
+              <span class="arch-step-badge">IDX</span>
+            </div>
+            <div class="arch-box">
+              <span>OPF Manifests</span>
+              <span class="arch-step-badge">XML</span>
+            </div>
+            <div class="arch-box">
+              <span>KindleGen Binary</span>
+              <span class="arch-step-badge">MOBI</span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- Installation Steps Section -->
+    <section id="installation">
+      <h2 class="section-title">Kindle Side-loading Guide</h2>
+      <div class="install-steps">
+        
+        <!-- Step 1 -->
+        <div class="install-step-card">
+          <div class="step-num">1</div>
+          <h3>Connect Device</h3>
+          <p>Connect your Kindle device (Paperwhite, Oasis, Scribe, or Basic) to your computer using a compatible USB data cable.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="install-step-card">
+          <div class="step-num">2</div>
+          <h3>Copy Mobi Files</h3>
+          <p>Move the downloaded <code>.mobi</code> files into the dictionaries directory of your Kindle filesystem:</p>
+          <div class="folder-tree">
+            Kindle/<br>
+            └── documents/<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;└── dictionaries/<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── Shobdo_Vandar_en-bn...mobi<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── ...
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="install-step-card">
+          <div class="step-num">3</div>
+          <h3>Activate in Settings</h3>
+          <p>Eject your device safely, then navigate to:<br>
+          <strong>Settings ➔ Language & Dictionaries ➔ Dictionaries</strong>.<br>
+          Select Shobdo Vandar as the active lookup library for English and Bangla.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Developer Setup Section (Tabs) -->
+    <section id="development">
+      <h2 class="section-title">Local Development</h2>
+      <div class="dev-container">
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="macos" id="tab-btn-macos">macOS (Native)</button>
+          <button class="tab-btn" data-tab="windows" id="tab-btn-windows">Windows (Manual)</button>
+          <button class="tab-btn" data-tab="linux" id="tab-btn-linux">Linux (32-bit Compat)</button>
+        </div>
+
+        <div class="tab-content">
+          
+          <!-- macOS Tab -->
+          <div class="tab-pane active" id="tab-macos">
+            <h4>macOS Development Environment</h4>
+            <p>macOS is the primary testing platform. The compilation script automatically searches the applications folder to locate the compiler embedded inside Kindle Previewer 3.</p>
+            <ul>
+              <li>Requires <strong>Python 3.8+</strong></li>
+              <li>Install the official <a href="https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.pkg" target="_blank">Kindle Previewer 3 (macOS Package)</a></li>
+            </ul>
+            <div class="code-container">
+              <pre class="code-block">
+<span class="code-comment"># Clone the repository</span>
+<span class="code-cmd">git clone https://github.com/tahmidxp96/Shobdo-Vandar.git</span>
+<span class="code-cmd">cd Shobdo-Vandar</span>
+
+<span class="code-comment"># Run the full ingestion and compilation suite</span>
+<span class="code-cmd">python3 kindle_dictionary_builder.py</span>
+
+<span class="code-comment"># Lookup/preview entry formatting inside terminal</span>
+<span class="code-cmd">python3 kindle_dictionary_builder.py -p "benevolent"</span></pre>
+            </div>
+          </div>
+
+          <!-- Windows Tab -->
+          <div class="tab-pane" id="tab-windows">
+            <h4>Windows Development Environment</h4>
+            <p>Windows builds require extracting and placing the Amazon kindlegen command line binary in the repository's root directory.</p>
+            <ul>
+              <li>Requires <strong>Python 3.8+</strong> for Windows</li>
+              <li>Install <a href="https://d2bzeorukaqrvt.cloudfront.net/KindlePreviewerInstaller.exe" target="_blank">Kindle Previewer 3 (Windows Installer)</a></li>
+              <li>Copy <code>kindlegen.exe</code> from <code>AppData\Local\Amazon\Kindle Previewer 3\lib\fc\bin\kindlegen.exe</code> into the root folder of the cloned repository.</li>
+            </ul>
+            <div class="code-container">
+              <pre class="code-block">
+<span class="code-comment">:: Clone repository and copy kindlegen.exe to the folder</span>
+<span class="code-cmd">git clone https://github.com/tahmidxp96/Shobdo-Vandar.git</span>
+<span class="code-cmd">cd Shobdo-Vandar</span>
+
+<span class="code-comment">:: Execute python build script</span>
+<span class="code-cmd">python kindle_dictionary_builder.py</span></pre>
+            </div>
+          </div>
+
+          <!-- Linux Tab -->
+          <div class="tab-pane" id="tab-linux">
+            <h4>Linux Development Environment</h4>
+            <p>Amazon does not distribute Kindle Previewer 3 for Linux. A legacy KindleGen binary must be used, which requires 32-bit execution libraries on modern 64-bit systems.</p>
+            <ul>
+              <li>Requires <strong>Python 3.8+</strong></li>
+              <li>Download legacy <a href="https://archive.org/details/kindlegen2.9" target="_blank">KindleGen v2.9 for Linux</a></li>
+              <li>Copy the extracted <code>kindlegen</code> binary to the repository root and make it executable: <code>chmod +x kindlegen</code></li>
+            </ul>
+            <div class="code-container">
+              <pre class="code-block">
+<span class="code-comment"># Install 32-bit compatibility libraries on Debian/Ubuntu host</span>
+<span class="code-cmd">sudo apt-get update</span>
+<span class="code-cmd">sudo apt-get install libc6-i386</span>
+
+<span class="code-comment"># Compile dictionaries</span>
+<span class="code-cmd">python3 kindle_dictionary_builder.py</span></pre>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="footer" id="site-footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="https://github.com/tahmidxp96/Shobdo-Vandar" target="_blank">GitHub Repository</a>
+        <a href="https://github.com/tahmidxp96/Shobdo-Vandar/blob/main/LICENSE" target="_blank">MIT License</a>
+        <a href="https://github.com/tahmidxp96/Shobdo-Vandar/releases" target="_blank">Releases</a>
+      </div>
+      <p class="footer-text">
+        &copy; 2026 Shobdo Vandar. Developed by Tahmid and contributors.
+      </p>
+      <div class="badge-ai">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
+          <path d="M12 2L2 22h20L12 2z"/>
+        </svg>
+        Pair Programmed with Antigravity AI using Gemini 3.5 Flash
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
